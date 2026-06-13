@@ -415,6 +415,76 @@
   .scanline { animation: reveal 0.5s var(--ease); }
   @keyframes reveal { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
 
+  /* ---------- auto-run demo control row ---------- */
+  .demo-bar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 0 18px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .demo-play {
+    font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--white); color: var(--ink);
+    border: 1px solid var(--border); border-radius: var(--pill);
+    padding: 7px 16px 7px 13px; cursor: pointer;
+    transition: border-color 0.2s var(--ease), background 0.2s var(--ease), transform 0.15s var(--ease);
+  }
+  .demo-play:hover { border-color: var(--blue); background: rgba(0,113,227,0.05); }
+  .demo-play:active { transform: scale(0.97); }
+  .demo-play:focus-visible { outline: 3px solid rgba(0,113,227,0.4); outline-offset: 2px; }
+  .demo-play-icon { font-size: 11px; line-height: 1; color: var(--blue); width: 13px; text-align: center; }
+
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--red); background: var(--red-tint);
+    padding: 5px 12px 5px 10px; border-radius: var(--pill);
+    transition: color 0.25s var(--ease), background 0.25s var(--ease);
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(194,57,52,0.55);
+    animation: live-throb 2s ease-out infinite;
+  }
+  @keyframes live-throb {
+    0%   { box-shadow: 0 0 0 0 rgba(194,57,52,0.5); opacity: 1; }
+    70%  { box-shadow: 0 0 0 7px rgba(194,57,52,0); opacity: 0.7; }
+    100% { box-shadow: 0 0 0 0 rgba(194,57,52,0); opacity: 1; }
+  }
+  /* paused state — pill goes calm/grey, dot stops throbbing */
+  .demo-bar.paused .live-pill { color: var(--ink-2); background: var(--field); }
+  .demo-bar.paused .live-dot { background: var(--ink-2); animation: none; box-shadow: none; }
+
+  .seg-progress { display: flex; gap: 5px; flex: 1; min-width: 120px; }
+  .seg {
+    flex: 1; height: 4px; border-radius: var(--pill);
+    background: var(--border-2); overflow: hidden;
+  }
+  .seg-fill {
+    display: block; height: 100%; width: 0; border-radius: var(--pill);
+    background: var(--blue);
+  }
+  .seg.done .seg-fill { width: 100%; transition: none; }
+  .seg.active .seg-fill { width: 100%; }
+
+  .demo-now {
+    font-size: 12px; font-weight: 500; color: var(--ink-2);
+    white-space: nowrap; min-width: 0;
+  }
+  .demo-now b { color: var(--ink); font-weight: 600; }
+
+  /* input "loading" cue when the driver populates the form */
+  .desk-layout .card.loading-cue {
+    box-shadow: 0 0 0 2px rgba(0,113,227,0.35), 0 18px 40px -24px rgba(0,113,227,0.4);
+    transition: box-shadow 0.3s var(--ease);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    .demo-now { display: none; }
+  }
+
   /* ============================================================
      GROUNDED / PROOF
      ============================================================ */
@@ -732,6 +802,26 @@
           <span class="card-title">Disposition readout</span>
           <span class="badge badge-dim" id="roStamp">Awaiting input</span>
         </div>
+
+        <!-- AUTO-RUN CONTROL ROW (demo driver) -->
+        <div class="demo-bar" id="demoBar" aria-label="Live demo controls">
+          <button type="button" class="demo-play" id="demoPlay" aria-label="Pause auto-demo" aria-pressed="true">
+            <span class="demo-play-icon" id="demoPlayIcon">❚❚</span>
+            <span class="demo-play-txt" id="demoPlayTxt">Pause</span>
+          </button>
+          <span class="live-pill" id="livePill" role="status">
+            <span class="live-dot"></span><span class="live-txt" id="liveTxt">LIVE</span>
+          </span>
+          <div class="seg-progress" id="segProgress" aria-hidden="true">
+            <span class="seg"><span class="seg-fill"></span></span>
+            <span class="seg"><span class="seg-fill"></span></span>
+            <span class="seg"><span class="seg-fill"></span></span>
+            <span class="seg"><span class="seg-fill"></span></span>
+            <span class="seg"><span class="seg-fill"></span></span>
+          </div>
+          <span class="demo-now" id="demoNow"></span>
+        </div>
+
         <div id="readout">
           <div class="readout-empty">
             <span class="blip">◎</span>
@@ -1288,6 +1378,7 @@ studio-pipeline-operator/
     btn.className = "preset-chip";
     btn.textContent = PRESETS[key].label;
     btn.addEventListener("click", function () {
+      Demo.pause("manual");           // user took over — stop the auto-loop
       chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
       btn.classList.add("active");
       loadPreset(PRESETS[key]);
@@ -1309,12 +1400,200 @@ studio-pipeline-operator/
     readoutPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  form.addEventListener("submit", function (e) { e.preventDefault(); run(); });
+  form.addEventListener("submit", function (e) { e.preventDefault(); Demo.pause("manual"); run(); });
 
   // clearing a manual edit deselects preset highlight
-  form.addEventListener("input", function () {
+  form.addEventListener("input", function (e) {
+    if (e && e.isTrusted) Demo.pause("manual");   // real user edit (not the driver's programmatic fill)
     chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
   });
+
+  // ========================================================================
+  // AUTO-RUN DRIVER — drives the EXISTING run() over a curated lead sequence.
+  // Touches no decision math: it only (a) selects a preset, (b) calls run(),
+  // (c) advances on a timer. The engine, presets, and renderers are untouched.
+  // ========================================================================
+  var Demo = (function () {
+    // Sequence order shows the full decision range. Keys map to PRESETS above.
+    var SEQ = ["summit", "fastcash", "whale", "refer", "haggle"];
+    var LEAD_MS = 6000;     // ~6s per lead → ~30s for 5
+    var TICK_MS = 50;       // progress-bar resolution
+
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    var bar      = document.getElementById("demoBar");
+    var playBtn  = document.getElementById("demoPlay");
+    var playIcon = document.getElementById("demoPlayIcon");
+    var playTxt  = document.getElementById("demoPlayTxt");
+    var liveTxt  = document.getElementById("liveTxt");
+    var nowEl    = document.getElementById("demoNow");
+    var segs     = Array.prototype.slice.call(document.querySelectorAll("#segProgress .seg"));
+    var inputCard = document.querySelector('[data-od-id="desk-input"]');
+
+    var idx = 0;            // current lead in SEQ
+    var playing = false;    // is the loop active
+    var started = false;    // has it ever auto-started (so we don't restart on re-entry to view)
+    var elapsed = 0;        // ms into the current lead's dwell
+    var tickTimer = null;
+
+    function chipFor(key) {
+      // find the preset chip whose label matches, to mirror the visual selection
+      var label = PRESETS[key] && PRESETS[key].label;
+      var found = null;
+      chipsBox.querySelectorAll(".preset-chip").forEach(function (c) {
+        if (c.textContent === label) found = c;
+      });
+      return found;
+    }
+
+    function paintSegs() {
+      segs.forEach(function (s, i) {
+        s.classList.remove("active", "done");
+        var fill = s.querySelector(".seg-fill");
+        if (i < idx) { s.classList.add("done"); fill.style.transition = "none"; fill.style.width = "100%"; }
+        else if (i === idx) {
+          s.classList.add("active");
+          var pct = Math.min(elapsed / LEAD_MS, 1) * 100;
+          fill.style.transition = "none";
+          fill.style.width = pct + "%";
+        } else { fill.style.transition = "none"; fill.style.width = "0%"; }
+      });
+    }
+
+    function renderLead(i) {
+      idx = ((i % SEQ.length) + SEQ.length) % SEQ.length;
+      var key = SEQ[idx];
+      // mirror the manual chip selection visually
+      chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
+      var chip = chipFor(key);
+      if (chip) chip.classList.add("active");
+      // brief "loading" cue on the input card so the viewer sees the input change
+      if (inputCard && !reduce) {
+        inputCard.classList.add("loading-cue");
+        setTimeout(function () { inputCard.classList.remove("loading-cue"); }, 360);
+      }
+      loadPreset(PRESETS[key]);   // populate the form fields (programmatic — no input event)
+      run();                       // REUSE the verified engine run + animations
+      if (nowEl) nowEl.innerHTML = "Now running · <b>" + escapeHtml(PRESETS[key].biz) + "</b>";
+      elapsed = 0;
+      paintSegs();
+    }
+
+    function tick() {
+      if (!playing) return;
+      elapsed += TICK_MS;
+      // update only the active segment fill for smoothness
+      var active = segs[idx];
+      if (active) {
+        var fill = active.querySelector(".seg-fill");
+        fill.style.transition = "none";
+        fill.style.width = (Math.min(elapsed / LEAD_MS, 1) * 100) + "%";
+      }
+      if (elapsed >= LEAD_MS) {
+        renderLead(idx + 1);       // advance + loop
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      tickTimer = setInterval(tick, TICK_MS);
+    }
+    function stopTimer() {
+      if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+      if (reduceTimer) { clearTimeout(reduceTimer); reduceTimer = null; }
+    }
+
+    function setPlayUI(on) {
+      playIcon.textContent = on ? "❚❚" : "▶";
+      playTxt.textContent  = on ? "Pause" : "Resume demo";
+      playBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      playBtn.setAttribute("aria-label", on ? "Pause auto-demo" : "Resume auto-demo");
+      liveTxt.textContent  = on ? "LIVE" : "PAUSED";
+      bar.classList.toggle("paused", !on);
+    }
+
+    var reduceTimer = null;
+    function play() {
+      playing = true;
+      started = true;
+      setPlayUI(true);
+      if (reduce) {
+        // reduced-motion: no progress churn. Render an example, hold a long
+        // static dwell (10s), then advance instantly. Calm, no motion-sickness.
+        if (!document.querySelector("#readout .ro-head")) renderLead(idx);
+        if (reduceTimer) clearTimeout(reduceTimer);
+        var advance = function () {
+          if (!playing) return;
+          renderLead(idx + 1);
+          reduceTimer = setTimeout(advance, 10000);
+        };
+        reduceTimer = setTimeout(advance, 10000);
+        return;
+      }
+      if (!document.querySelector("#readout .ro-head")) renderLead(idx);
+      startTimer();
+    }
+
+    function pause(why) {
+      playing = false;
+      stopTimer();
+      setPlayUI(false);
+    }
+
+    function toggle() {
+      if (playing) pause("button");
+      else play();
+    }
+
+    // play/pause button
+    playBtn.addEventListener("click", toggle);
+
+    // SOFT pause on console hover — halts the timer but leaves the playing
+    // state + LIVE label intact so it silently resumes on mouse-leave.
+    // Does not touch userPaused (hover is not an explicit user pause).
+    if (!reduce) {
+      var hoverHeld = false;
+      readoutPanel.addEventListener("mouseenter", function () {
+        if (playing && tickTimer) { hoverHeld = true; if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+      });
+      readoutPanel.addEventListener("mouseleave", function () {
+        if (hoverHeld && playing) { hoverHeld = false; startTimer(); }
+        else { hoverHeld = false; }
+      });
+    }
+
+    // auto-start / auto-pause when the Deal Desk scrolls in/out of view
+    var deskSection = document.getElementById("desk");
+    var userPaused = false;   // sticky: if the user explicitly paused, don't auto-resume on scroll
+    if ("IntersectionObserver" in window && deskSection) {
+      var dio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            if (!started) { play(); }                       // first time in view → start
+            else if (!userPaused && !playing) { play(); }   // back in view → resume (unless user paused)
+          } else {
+            if (playing) { stopTimer(); playing = false; }  // off-screen → quietly halt the timer (keep LIVE UI)
+          }
+        });
+      }, { threshold: 0.25 });
+      dio.observe(deskSection);
+    } else {
+      // no IO support → just start
+      play();
+    }
+
+    // wrap pause so a manual/button pause is sticky against scroll auto-resume
+    var _pause = pause;
+    pause = function (why) {
+      if (why === "manual" || why === "button") userPaused = true;
+      _pause(why);
+    };
+
+    return {
+      pause: function (why) { pause(why); },
+      play: play
+    };
+  })();
 
   // ---- SCROLL REVEAL (presentation only) --------------------------------
   if ("IntersectionObserver" in window) {
