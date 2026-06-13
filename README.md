@@ -4,7 +4,7 @@
 
 Built for: a solo studio founder selling $750–$12,500 engagements who sources 40–60 leads a week and loses half their day to triage and follow-through instead of selling.
 
-**▶ Live demo (the operator runs on real API): https://pipeline-operator.vercel.app** — paste a lead, watch it decide and draft in real time, or run the side-by-side duel against a generic assistant. The demo loads this exact folder as its system prompt.
+**▶ Live demo — a working pipeline, not a slide: https://pipeline-operator.vercel.app/board** — an interactive Kanban seeded with real leads. Paste a lead into the Run panel and watch the operator decide live (on the real API, loading this exact folder as its system prompt) and **move the card into the right stage bucket**. Click any card for the full lead detail — score breakdown, activity timeline, and a working dialer, email composer, and scheduler. Or run the side-by-side duel against a generic assistant.
 
 ---
 
@@ -35,6 +35,19 @@ One of them you can act on right now. That's the whole assignment.
 It is an **operator**: it makes a decision and routes the work. It is **not** a chatbot (it never asks you what to do), and **not** a CRM (it doesn't just store the lead — it changes its state). The folder *is* the operator. Drop it into a Claude Project and Claude becomes the pipeline desk for your studio.
 
 It owns the full funnel: `new → contacted → replied → qualifier → diagnostic → proposal → won` (and `lost`). Six decision stations, one per transition, each grounded in the studio's real decision logic — the same gate filters, 5-dimension scoring rubric, walk-away flags, qualifier protocol, and service-routing patterns the live CRM runs on.
+
+---
+
+## The live demo is a working pipeline
+
+[`/board`](https://pipeline-operator.vercel.app/board) is the operator wired into a real sales-pipeline UI — built to the same fidelity as the studio's production lead CRM:
+
+- **Interactive Kanban** — eight stage columns seeded with leads, each column showing count, pipeline value, A-tier count, and a heat bar. Cards carry the grade, deal value, next action, and contact methods.
+- **The operator moves the board** — paste a lead in the Run panel; the operator decides live and the card **routes itself to the correct bucket**: `advance` → next stage, `escalate` → Diagnostic (the whale), `refer / decline / kill` → Lost with a reason. The decision physically changes pipeline state — the whole point of an operator over a chatbot.
+- **Full lead detail** — click any card for the 5-signal score breakdown (with per-dimension evidence), pain signals, and a unified activity timeline.
+- **The desk tools** — a click-to-call **dialer** (with outcome logging), a templated **email composer**, and a **scheduler** (booking + live countdown + no-show/done/cancel). Every action writes to the lead's timeline.
+
+The brain is unchanged — the app loads this folder as the system prompt. The UI is just the surface the operator drives. *(Demo state is client-side with a Reset button; the dialer/email/scheduler are mocked, so trying it costs nothing.)*
 
 ---
 
