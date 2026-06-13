@@ -4,6 +4,8 @@
 
 Built for: a solo studio founder selling $750–$12,500 engagements who sources 40–60 leads a week and loses half their day to triage and follow-through instead of selling.
 
+**▶ Live demo (the operator runs on real API): https://pipeline-operator.vercel.app** — paste a lead, watch it decide and draft in real time, or run the side-by-side duel against a generic assistant. The demo loads this exact folder as its system prompt.
+
 ---
 
 ## See the difference in 30 seconds

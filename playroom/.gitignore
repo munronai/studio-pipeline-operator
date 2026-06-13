@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next
+/out
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# env
+.env.local
+.env*.local
+
+# vercel
+.vercel
+
+# NOTE: .operator/ is intentionally committed (NOT ignored). It's the build-time mirror
+# of the operator folder so the deployed function is self-contained. scripts/sync-operator.mjs
+# refreshes it from ../ whenever the source folder is present (local dev / full-repo build).
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+
+.vercel
