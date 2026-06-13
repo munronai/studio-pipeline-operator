@@ -1,0 +1,14 @@
+# Local working notes — never shipped
+pressure-test-notes.md
+domain-decision.md
+launch-kit.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Live session memory is illustrative; real lead data stays local
+sessions/*.local.md
