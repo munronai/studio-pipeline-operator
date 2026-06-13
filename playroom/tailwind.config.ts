@@ -28,6 +28,17 @@ const config: Config = {
         decline: { DEFAULT: "#c23934", soft: "#f8ecec" }, // critical / decline
         // Single restrained accent for primary actions
         accent: { DEFAULT: "#2f6df6", soft: "#eef3ff" },
+        // Onyx indigo — the Lead CRM's primary accent (grade A+/A fills, active stage).
+        indigo: { DEFAULT: "#4f46e5", hover: "#4338ca", soft: "#eef0fe" },
+        // Signal blue — grade B fill / score-bar accent.
+        signal: { DEFAULT: "#2f6df6", soft: "#eef3ff" },
+        // Status set (mirrors the CRM)
+        success: "#0f9d58",
+        warning: "#b7791f",
+        critical: "#d92d20",
+      },
+      maxWidth: {
+        drawer: "640px",
       },
       fontFamily: {
         mono: ['"JetBrains Mono"', '"IBM Plex Mono"', "Consolas", "monospace"],

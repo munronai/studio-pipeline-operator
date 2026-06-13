@@ -27,9 +27,19 @@
   --decline-soft: #f8ecec;
   --accent: #2f6df6;
   --accent-soft: #eef3ff;
+  /* Onyx indigo — Lead CRM primary accent */
+  --indigo: #4f46e5;
+  --indigo-hover: #4338ca;
+  --indigo-soft: #eef0fe;
+  --signal: #2f6df6;
+  --signal-soft: #eef3ff;
+  --success: #0f9d58;
+  --warning: #b7791f;
+  --critical: #d92d20;
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.05);
   --shadow-md: 0 4px 12px -2px rgba(10, 10, 10, 0.09);
+  --shadow-float: 0 16px 48px -12px rgba(10, 10, 10, 0.22);
   --radius: 6px;
 }
 
@@ -232,4 +242,104 @@
   background: var(--sunken); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 0.75rem 1rem;
   font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ink-soft);
+}
+
+/* ---------------- PIPELINE / KANBAN ---------------- */
+
+/* Float shadow for the drawer + modals */
+.shadow-float { box-shadow: var(--shadow-float); }
+
+/* Overlay + slide-over animations */
+@keyframes overlayIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+.overlay-in { animation: overlayIn 0.18s ease-out both; }
+
+@keyframes drawerIn {
+  0% { opacity: 0; transform: translateX(24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.drawer-in { animation: drawerIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes modalIn {
+  0% { opacity: 0; transform: translateY(10px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-in { animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Toast slide-up */
+@keyframes toastIn {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.toast-in { animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* A lead card just dropped into a column */
+@keyframes cardDrop {
+  0% { opacity: 0; transform: translateY(-6px); box-shadow: 0 0 0 2px var(--indigo); }
+  100% { opacity: 1; transform: translateY(0); box-shadow: var(--shadow-sm); }
+}
+.card-drop { animation: cardDrop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Kanban lead card resting / hover */
+.lead-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+.lead-card:hover { box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+.lead-card:active { transform: translateY(0.5px); }
+
+/* Column heat bar track */
+.heat-track {
+  height: 3px; border-radius: 2px; background: var(--sunken); overflow: hidden;
+}
+.heat-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+
+/* Score bar */
+.score-track { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden; }
+.score-fill { height: 100%; border-radius: 3px; }
+
+/* Form controls — dense CRM inputs */
+.field-input {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.55rem;
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+}
+.field-input:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-soft); }
+.field-input::placeholder { color: var(--faint); }
+.field-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+/* Indigo action button */
+.btn-indigo {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  background: var(--indigo); color: #fff; border: 1px solid var(--indigo);
+  border-radius: var(--radius); font-weight: 600; font-size: 0.82rem;
+  padding: 0.45rem 0.8rem; transition: background 0.14s ease, transform 0.1s ease;
+}
+.btn-indigo:hover:not(:disabled) { background: var(--indigo-hover); }
+.btn-indigo:active:not(:disabled) { transform: translateY(0.5px); }
+.btn-indigo:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Mono money / tabular figures */
+.mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+/* Eyebrow at the spec'd 11px */
+.eyebrow-xs {
+  font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.07em; color: var(--muted); font-weight: 600;
+}
+
+/* Activity channel pip */
+.chan-pip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 5px; font-size: 0.72rem;
+  border: 1px solid var(--line-strong); background: var(--sunken); color: var(--ink-soft);
+  flex-shrink: 0;
 }

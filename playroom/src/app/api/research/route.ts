@@ -21,7 +21,9 @@ const VALID_MODES: Mode[] = ["run", "duel"];
 // Per-mode output caps (cost ceiling). Sized so a full disposition
 // (WHERE / DISPOSITION / ARTIFACT / NEXT ACTION / PIPELINE UPDATE / FLAGS) fits.
 const MAX_TOKENS: Record<Mode, number> = {
-  run: 1800,
+  // Run emits the human-readable disposition PLUS a trailing JSON block the
+  // board parses to route the lead — give it the extra headroom.
+  run: 2100,
   duel: 1600,
 };
 

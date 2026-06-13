@@ -12,3 +12,4 @@ Thumbs.db
 
 # Live session memory is illustrative; real lead data stays local
 sessions/*.local.md
+submission-posts.md

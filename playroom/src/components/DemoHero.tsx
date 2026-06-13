@@ -284,8 +284,8 @@ function SceneClose() {
         below. One dumps options. The other decides, drafts, and routes.
       </p>
       <div style={{ animationDelay: "750ms" }} className="flex flex-wrap justify-center gap-3 mt-7">
-        <a href="#duel" className="cta-btn cta-accent">See them head-to-head ↓</a>
-        <a href="#workspace" className="cta-btn">Run your own lead</a>
+        <a href="/board" className="cta-btn cta-accent">Open the live board ↗</a>
+        <a href="#duel" className="cta-btn">See them head-to-head ↓</a>
       </div>
     </div>
   );

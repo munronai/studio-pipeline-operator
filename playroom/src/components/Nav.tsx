@@ -22,10 +22,10 @@ export function Wordmark({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   );
 }
 
-export function Nav({ active }: { active?: "home" | "try" }) {
+export function Nav({ active }: { active?: "home" | "try" | "board" }) {
   return (
     <header className="sticky top-0 z-30 backdrop-blur-sm bg-bg/85 border-b border-line">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Wordmark />
         <nav className="flex items-center gap-1 sm:gap-2 text-[0.8rem]">
           <Link
@@ -40,13 +40,23 @@ export function Nav({ active }: { active?: "home" | "try" }) {
           </Link>
           <Link
             href="/try"
-            className={`px-3 py-1.5 rounded-card border transition-all no-underline font-medium ${
+            className={`px-3 py-1.5 rounded-card transition-colors no-underline ${
               active === "try"
-                ? "bg-ink text-white border-ink"
+                ? "text-ink font-semibold"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            Workspace
+          </Link>
+          <Link
+            href="/board"
+            className={`px-3 py-1.5 rounded-card border transition-all no-underline font-medium ${
+              active === "board"
+                ? "bg-indigo text-white border-indigo"
                 : "border-line text-ink hover:bg-sunken"
             }`}
           >
-            Open workspace
+            Open the live board
           </Link>
         </nav>
       </div>

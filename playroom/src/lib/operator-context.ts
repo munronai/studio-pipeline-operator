@@ -54,7 +54,32 @@ The operator handed you a lead at some station of the pipeline. Locate the stati
 **PIPELINE UPDATE** — the exact field writes, using the real taxonomy (e.g. \`stage: contacted · grade: B+ · next_action_due: +2d\`).
 **FLAGS** *(only when present)* — anything escalated to the human, with the reason and the one open question.
 
-End in a disposition, never a question bounced back. If one fact blocks the decision, apply the One-Question Rule (one banded question + what you'll do with each answer), then decide on the conservative read.`,
+End in a disposition, never a question bounced back. If one fact blocks the decision, apply the One-Question Rule (one banded question + what you'll do with each answer), then decide on the conservative read.
+
+---
+
+## MACHINE TAIL (required) — emit AFTER the human-readable shape above
+
+After the markdown disposition, output ONE fenced \`\`\`json block as the very last thing in your reply. The app parses it to route the lead onto the pipeline board. Keep the markdown above human-readable; the JSON is the machine copy of the same decision. Use this exact schema (omit a field only if truly unknown — never invent budget/authority):
+
+\`\`\`json
+{
+  "disposition": "advance | escalate | refer | decline | kill",
+  "grade": "A+ | A | B | C | D",
+  "fit_score": 0,
+  "scores": { "need": 0, "fit": 0, "reach": 0, "pay": 0, "intent": 0 },
+  "score_evidence": { "need": "", "fit": "", "reach": "", "pay": "", "intent": "" },
+  "stage_hint": "new | contacted | replied | qualifier | diagnostic | proposal | won | lost",
+  "next_action": "",
+  "next_action_due": "ISO-8601 date or relative like +2d",
+  "channel": "call | sms | email | linkedin | walk-in | referral | note",
+  "artifact_type": "call-script | email | decline | proposal-skeleton | booking-ask | referral",
+  "flags": [],
+  "deal_value": 0
+}
+\`\`\`
+
+Rules for the JSON: \`disposition\` is mandatory and must match the markdown decision. \`scores\` are each 0–10; \`fit_score\` is the 0–100 composite. \`deal_value\` is your best estimate of the engagement value in dollars (0 if a kill/decline with no value). For ESCALATE set \`stage_hint\` to "diagnostic"; for REFER/DECLINE/KILL set it to "lost".`,
 
   duel: `
 # ACTIVE MODE: THE DUEL (operator side) — DECIDE, DO NOT DEFER

@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { LiveDuel } from "./LiveDuel";
 import { Chat } from "./Chat";
-import { PipelineBoard } from "./PipelineBoard";
+import { PipelineWorkspace } from "./pipeline/PipelineWorkspace";
 
 type Tab = "run" | "duel" | "pipeline";
 
 const TABS: { id: Tab; label: string; glyph: string; tagline: string }[] = [
   { id: "run", label: "Run a lead", glyph: "▸", tagline: "Paste a lead. Get a disposition + the drafted next action." },
   { id: "duel", label: "Duel", glyph: "⊟", tagline: "Generic AI vs the operator, same lead." },
-  { id: "pipeline", label: "Pipeline", glyph: "≣", tagline: "The six stations and the dispositions, mapped." },
+  { id: "pipeline", label: "Pipeline board", glyph: "≣", tagline: "The live Kanban — run a lead and watch the card drop in." },
 ];
 
 export function Workspace({ initial = "run" }: { initial?: Tab }) {
@@ -42,7 +43,17 @@ export function Workspace({ initial = "run" }: { initial?: Tab }) {
 
       {tab === "run" && <Chat />}
       {tab === "duel" && <LiveDuel />}
-      {tab === "pipeline" && <PipelineBoard />}
+      {tab === "pipeline" && (
+        <div className="space-y-3">
+          <PipelineWorkspace />
+          <div className="text-[0.74rem] text-muted">
+            Want the board full-width with more room?{" "}
+            <Link href="/board" className="text-indigo font-medium hover:underline">
+              Open the dedicated live board ↗
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

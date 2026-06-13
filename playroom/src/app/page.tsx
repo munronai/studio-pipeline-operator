@@ -114,8 +114,8 @@ export default function Home() {
           Stop deciding what to do with every lead. Paste it. The operator decides, drafts, and routes.
         </p>
         <div className="flex flex-wrap justify-center gap-3 mt-7">
-          <a href="#duel" className="cta-btn cta-accent">Run the duel</a>
-          <Link href="/try" className="cta-btn">Open the workspace</Link>
+          <Link href="/board" className="cta-btn cta-accent">Open the live board</Link>
+          <a href="#duel" className="cta-btn">Run the duel</a>
         </div>
       </Section>
 
