@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE PIPELINE OPERATOR — Deal Desk</title>
+<meta name="description" content="A folder-based AI operator that runs a diagnostic-first studio's entire sales pipeline. It decides the disposition, drafts the next action, and tells you exactly what to write to the CRM." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     MISSION CONTROL — tokens (only the system's colors)
+     ============================================================ */
+  :root {
+    --bg-default: #0B1120;
+    --bg-surface: #111827;
+    --bg-surface-hover: #1A2535;
+    --bg-surface-active: #1E3A5F;
+    --border-default: #1E3A5F;
+    --border-subtle: #162035;
+    --data-primary: #FFB800;   /* amber */
+    --data-secondary: #00D4FF; /* cyan  */
+    --data-alert-critical: #FF4757;
+    --data-alert-warning: #FF9F43;
+    --data-success: #26DE81;
+    --fg-primary: #E8F0FE;
+    --fg-secondary: #8BA3C7;
+    --fg-tertiary: #4A6080;
+
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+
+    --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+    --space-16: 64px; --space-20: 80px;
+
+    --transition-fast: 100ms ease-in;
+    --transition-base: 150ms ease-out;
+    --transition-slow: 300ms ease-out;
+    --maxw: 1200px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg-default);
+    color: var(--fg-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    /* faint telemetry grid */
+    background-image:
+      linear-gradient(rgba(30,58,95,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,58,95,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  ::selection { background: rgba(255,184,0,0.25); color: var(--fg-primary); }
+
+  h1, h2, h3, h4 { margin: 0; font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--data-secondary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--space-6); }
+  .mono { font-family: var(--font-mono); }
+
+  /* section scaffolding */
+  section { padding: var(--space-20) 0; border-top: 1px solid var(--border-subtle); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--fg-secondary);
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--data-success);
+    box-shadow: 0 0 8px var(--data-success);
+    animation: blink 2.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .dot.amber { background: var(--data-primary); box-shadow: 0 0 8px var(--data-primary); }
+  .dot.cyan { background: var(--data-secondary); box-shadow: 0 0 8px var(--data-secondary); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 30px; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.01em; color: var(--fg-primary);
+    margin-bottom: var(--space-4);
+  }
+  .section-lead { color: var(--fg-secondary); max-width: 64ch; font-size: 15px; }
+
+  /* panels */
+  .panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    padding: var(--space-4);
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .panel-title {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--fg-secondary);
+    display: flex; align-items: center; gap: var(--space-2);
+  }
+
+  /* badges */
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 8px; border-radius: 2px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .badge-nominal  { background: rgba(38,222,129,0.15); color: var(--data-success); border: 1px solid rgba(38,222,129,0.3); }
+  .badge-warning  { background: rgba(255,159,67,0.15); color: var(--data-alert-warning); border: 1px solid rgba(255,159,67,0.3); }
+  .badge-critical { background: rgba(255,71,87,0.15); color: var(--data-alert-critical); border: 1px solid rgba(255,71,87,0.3); }
+  .badge-amber    { background: rgba(255,184,0,0.15); color: var(--data-primary); border: 1px solid rgba(255,184,0,0.3); }
+  .badge-cyan     { background: rgba(0,212,255,0.13); color: var(--data-secondary); border: 1px solid rgba(0,212,255,0.3); }
+  .badge-dim      { background: var(--bg-surface-hover); color: var(--fg-secondary); border: 1px solid var(--border-default); }
+
+  /* buttons */
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 11px 20px; border-radius: 4px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    color: var(--fg-primary);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    display: inline-flex; align-items: center; gap: var(--space-2);
+  }
+  .btn:hover { border-color: var(--data-secondary); background: var(--bg-surface-hover); }
+  .btn:focus-visible { outline: 2px solid var(--data-secondary); outline-offset: 2px; }
+  .btn-primary {
+    background: var(--data-primary);
+    color: #0B1120; border-color: var(--data-primary);
+    font-weight: 700;
+  }
+  .btn-primary:hover { background: #ffc62e; border-color: #ffc62e; }
+
+  /* ============================================================
+     STATUS BAR / NAV
+     ============================================================ */
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(11,17,32,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-default);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; gap: var(--space-5);
+    height: 56px;
+  }
+  .wordmark {
+    font-family: var(--font-mono);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--fg-primary); white-space: nowrap;
+  }
+  .wordmark .op { color: var(--data-primary); }
+  .sys-chip {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--data-success);
+    border: 1px solid rgba(38,222,129,0.3);
+    background: rgba(38,222,129,0.1);
+    padding: 3px 9px; border-radius: 2px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  nav.toplinks { margin-left: auto; display: flex; align-items: center; gap: var(--space-5); }
+  nav.toplinks a {
+    font-size: 12px; color: var(--fg-secondary);
+    text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-mono);
+  }
+  nav.toplinks a:hover { color: var(--fg-primary); text-decoration: none; }
+  .nav-cta {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    background: var(--data-primary); color: #0B1120;
+    padding: 7px 14px; border-radius: 4px; letter-spacing: 0.03em;
+  }
+  .nav-cta:hover { background: #ffc62e; text-decoration: none; }
+  .menu-toggle { display: none; }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero { padding: 96px 0 80px; border-top: none; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: var(--space-12); align-items: center; }
+  .hero h1 {
+    font-family: var(--font-mono);
+    font-size: 52px; font-weight: 700; line-height: 1.03;
+    letter-spacing: -0.02em; color: var(--fg-primary);
+    margin: var(--space-4) 0;
+  }
+  .hero h1 .accent { color: var(--data-primary); }
+  .hero-sub { font-size: 16px; color: var(--fg-secondary); max-width: 52ch; margin-bottom: var(--space-6); }
+  .hero-ctas { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .hero-stats {
+    display: flex; gap: var(--space-6); margin-top: var(--space-8);
+    flex-wrap: wrap;
+  }
+  .hstat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--data-primary); line-height: 1; }
+  .hstat-lbl { font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+  /* hero deal-desk board */
+  .deskboard { padding: var(--space-3); }
+  .stations-strip {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+    margin-bottom: var(--space-3);
+  }
+  .station-pip {
+    text-align: center; padding: 6px 2px; border-radius: 3px;
+    background: var(--bg-surface-hover); border: 1px solid var(--border-subtle);
+  }
+  .station-pip .n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--data-secondary); }
+  .station-pip .l { font-size: 8px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .station-pip.active { border-color: var(--data-primary); background: rgba(255,184,0,0.08); }
+  .station-pip.active .n { color: var(--data-primary); }
+
+  .lead-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-2);
+    align-items: center;
+    padding: 9px 10px; border-radius: 3px;
+    background: var(--bg-surface-hover);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 5px;
+  }
+  .lead-row .nm { font-family: var(--font-mono); font-size: 12px; color: var(--fg-primary); }
+  .lead-row .st { font-size: 10px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+  .gradechip {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    padding: 2px 7px; border-radius: 2px; min-width: 30px; text-align: center;
+  }
+  .g-a { background: rgba(38,222,129,0.15); color: var(--data-success); border: 1px solid rgba(38,222,129,0.35); }
+  .g-b { background: rgba(255,184,0,0.15); color: var(--data-primary); border: 1px solid rgba(255,184,0,0.35); }
+  .g-c { background: rgba(139,163,199,0.12); color: var(--fg-secondary); border: 1px solid var(--border-default); }
+  .g-kill { background: rgba(255,71,87,0.15); color: var(--data-alert-critical); border: 1px solid rgba(255,71,87,0.35); }
+
+  /* ============================================================
+     GENERIC GRIDS
+     ============================================================ */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+
+  /* console panels */
+  .console {
+    font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6;
+    background: #0a0f1c; border: 1px solid var(--border-default);
+    border-radius: 4px; padding: var(--space-4);
+    color: var(--fg-secondary); white-space: pre-wrap; word-break: break-word;
+  }
+  .console .cyan { color: var(--data-secondary); }
+  .console .amber { color: var(--data-primary); }
+  .console .red { color: var(--data-alert-critical); }
+  .console .green { color: var(--data-success); }
+  .console .dim { color: var(--fg-tertiary); }
+  .console .pri { color: var(--fg-primary); }
+
+  /* problem console */
+  .prob-console .ln { display: block; }
+  .prob-console .prompt { color: var(--data-success); }
+
+  /* disposition-engine numbered strip */
+  .engine-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); margin-top: var(--space-6); }
+  .engine-cell { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 4px; padding: var(--space-4); }
+  .engine-cell .num { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+  .engine-cell .title { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--fg-primary); margin: 6px 0 4px; }
+  .engine-cell .stage { font-size: 10px; color: var(--data-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .engine-cell .desc { font-size: 12px; color: var(--fg-secondary); margin-top: 8px; }
+
+  .output-shape { margin-top: var(--space-8); }
+  .shape-row { display: grid; grid-template-columns: 150px 1fr; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+  .shape-row .k { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--data-primary); letter-spacing: 0.03em; }
+  .shape-row .v { font-size: 13px; color: var(--fg-secondary); }
+
+  /* ============================================================
+     LIVE DEAL DESK
+     ============================================================ */
+  #desk { background: linear-gradient(180deg, rgba(30,58,95,0.05), transparent 240px); }
+  .desk-layout { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-4); margin-top: var(--space-6); align-items: start; }
+  .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-3); }
+  .preset-chip {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--bg-surface-hover); color: var(--fg-secondary);
+    border: 1px solid var(--border-default); border-radius: 3px;
+    padding: 6px 10px; cursor: pointer; transition: all var(--transition-fast);
+  }
+  .preset-chip:hover { border-color: var(--data-secondary); color: var(--fg-primary); }
+  .preset-chip:focus-visible { outline: 2px solid var(--data-secondary); outline-offset: 2px; }
+  .preset-chip.active { border-color: var(--data-primary); color: var(--data-primary); background: rgba(255,184,0,0.08); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-secondary);
+  }
+  .field input, .field select {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: var(--bg-default); color: var(--fg-primary);
+    border: 1px solid var(--border-default); border-radius: 3px;
+    padding: 8px 9px;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--data-secondary); }
+  .run-btn { width: 100%; justify-content: center; margin-top: var(--space-4); }
+
+  /* readout */
+  .readout-empty {
+    border: 1px dashed var(--border-default); border-radius: 4px;
+    padding: var(--space-12) var(--space-6); text-align: center;
+    color: var(--fg-tertiary); font-family: var(--font-mono); font-size: 13px;
+  }
+  .readout-empty .blip { font-size: 28px; color: var(--data-secondary); display:block; margin-bottom: 10px; animation: blink 2s ease-in-out infinite; }
+
+  .ro-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .ro-where { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); }
+  .ro-where b { color: var(--fg-primary); }
+  .ro-disp {
+    font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+    letter-spacing: -0.01em; margin: var(--space-2) 0 var(--space-4);
+  }
+  .ro-disp.advance { color: var(--data-success); }
+  .ro-disp.kill, .ro-disp.decline { color: var(--data-alert-critical); }
+  .ro-disp.refer { color: var(--data-alert-warning); }
+  .ro-disp.escalate { color: var(--data-primary); }
+
+  /* gauges */
+  .gauges { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-4) 0; }
+  .gauge-row { display: grid; grid-template-columns: 130px 1fr 38px; gap: var(--space-3); align-items: center; }
+  .gauge-lbl { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
+  .gauge-lbl .w { color: var(--fg-tertiary); }
+  .gauge-track { height: 8px; background: var(--border-default); border-radius: 2px; overflow: hidden; position: relative; }
+  .gauge-fill { height: 100%; background: var(--data-primary); border-radius: 2px; width: 0; transition: width 700ms cubic-bezier(.2,.8,.2,1); }
+  .gauge-val { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--data-primary); text-align: right; }
+  .gauge-reason { grid-column: 1 / -1; font-size: 11px; color: var(--fg-tertiary); margin-top: -4px; padding-left: 130px; }
+
+  .composite-bar {
+    display: flex; align-items: center; gap: var(--space-4);
+    background: var(--bg-surface-hover); border: 1px solid var(--border-default);
+    border-radius: 4px; padding: var(--space-3) var(--space-4); margin: var(--space-4) 0;
+    flex-wrap: wrap;
+  }
+  .composite-num { font-family: var(--font-mono); font-size: 40px; font-weight: 700; color: var(--data-primary); line-height: 1; }
+  .composite-meta { font-size: 12px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+  .big-grade {
+    font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+    padding: 6px 16px; border-radius: 4px; margin-left: auto;
+  }
+
+  .ro-block { margin-top: var(--space-4); }
+  .ro-block .lab { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--data-primary); text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .ro-block .body { font-size: 13px; color: var(--fg-secondary); }
+  .field-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .alert-banner {
+    display: flex; align-items: flex-start; gap: var(--space-3);
+    background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.4);
+    border-left: 4px solid var(--data-alert-critical); border-radius: 4px;
+    padding: var(--space-3) var(--space-4); margin-top: var(--space-3);
+  }
+  .alert-banner.warn { background: rgba(255,159,67,0.1); border-color: rgba(255,159,67,0.4); border-left-color: var(--data-alert-warning); }
+  .alert-banner .atext { font-size: 13px; color: var(--data-alert-critical); }
+  .alert-banner.warn .atext { color: var(--data-alert-warning); }
+  .alert-banner .aicon { flex-shrink: 0; font-family: var(--font-mono); font-weight: 700; }
+  .alert-banner.warn .aicon { color: var(--data-alert-warning); }
+  .alert-banner .aicon { color: var(--data-alert-critical); }
+
+  .scanline { animation: scan 1.1s ease-out; }
+  @keyframes scan { 0%{box-shadow: inset 0 0 0 rgba(0,212,255,0)} 30%{box-shadow: inset 0 0 30px rgba(0,212,255,0.12)} 100%{box-shadow: inset 0 0 0 rgba(0,212,255,0)} }
+
+  /* ============================================================
+     GROUNDED / PROOF
+     ============================================================ */
+  .proof-list { list-style: none; padding: 0; margin: 0; }
+  .proof-list li { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+  .proof-list li:last-child { border-bottom: none; }
+  .proof-list .lk { color: var(--fg-secondary); }
+  .proof-list .wt { font-family: var(--font-mono); color: var(--data-primary); font-weight: 700; }
+  .proof-list .flag { color: var(--fg-secondary); font-family: var(--font-mono); font-size: 12px; }
+  .proof-list .flag .kx { color: var(--data-alert-warning); }
+
+  /* before/after */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-6); }
+
+  /* pricing */
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  .price-card { position: relative; display: flex; flex-direction: column; }
+  .price-card.feature { border-color: var(--data-primary); box-shadow: 0 0 0 1px var(--data-primary); }
+  .price-tag { font-family: var(--font-mono); font-size: 34px; font-weight: 700; color: var(--fg-primary); line-height: 1; margin: var(--space-2) 0; }
+  .price-tag .per { font-size: 13px; color: var(--fg-tertiary); font-weight: 400; }
+  .price-name { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--data-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .price-feats { list-style: none; padding: 0; margin: var(--space-4) 0; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .price-feats li { font-size: 12.5px; color: var(--fg-secondary); display: flex; gap: 9px; }
+  .price-feats li::before { content: "›"; color: var(--data-success); font-family: var(--font-mono); font-weight: 700; }
+  .most-tag { position: absolute; top: -10px; right: var(--space-4); }
+
+  /* ICM note */
+  .icm-note { display: grid; grid-template-columns: auto 1fr; gap: var(--space-6); align-items: center; }
+  .icm-folder { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); line-height: 1.7; }
+  .icm-folder .f { color: var(--data-secondary); }
+  .icm-folder .c { color: var(--fg-tertiary); }
+
+  /* footer CTA */
+  .cta-band {
+    background: var(--data-primary); color: #0B1120;
+    border-radius: 4px; padding: var(--space-12) var(--space-8); text-align: center;
+  }
+  .cta-band h2 { font-family: var(--font-mono); font-size: 30px; font-weight: 700; color: #0B1120; margin-bottom: var(--space-3); }
+  .cta-band p { color: #1a2230; font-size: 15px; margin-bottom: var(--space-6); max-width: 56ch; margin-left: auto; margin-right: auto; }
+  .cta-band .btn-dark {
+    background: #0B1120; color: var(--data-primary); border-color: #0B1120;
+    font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+    padding: 13px 28px; border-radius: 4px; display: inline-block; cursor: pointer;
+  }
+  .cta-band .btn-dark:hover { background: #111827; text-decoration: none; }
+
+  footer.foot { padding: var(--space-8) 0; border-top: 1px solid var(--border-default); }
+  .foot-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+  .foot-links { display: flex; gap: var(--space-5); flex-wrap: wrap; }
+  .foot-links a { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+  .foot-copy { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 980px) {
+    .hero-grid { grid-template-columns: 1fr; gap: var(--space-8); }
+    .hero h1 { font-size: 42px; }
+    .desk-layout { grid-template-columns: 1fr; }
+    .engine-strip { grid-template-columns: repeat(3, 1fr); }
+    .grid-3, .price-grid { grid-template-columns: 1fr; }
+    .icm-note { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    nav.toplinks a:not(.nav-cta) { display: none; }
+    .sys-chip { display: none; }
+    .grid-2, .ba-grid { grid-template-columns: 1fr; }
+    .section-title { font-size: 25px; }
+    .hero h1 { font-size: 36px; }
+    .shape-row { grid-template-columns: 1fr; gap: 4px; }
+    .gauge-reason { padding-left: 0; }
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 0 var(--space-4); }
+    section { padding: var(--space-12) 0; }
+    .hero { padding: 56px 0 48px; }
+    .hero h1 { font-size: 30px; }
+    .engine-strip { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .gauge-row { grid-template-columns: 96px 1fr 32px; }
+    .gauge-lbl { font-size: 10px; }
+    .composite-num { font-size: 32px; }
+    .wordmark { font-size: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ STATUS BAR / NAV -->
+<header class="topbar" data-od-id="topbar">
+  <div class="wrap topbar-inner">
+    <span class="wordmark" data-od-id="wordmark">THE <span class="op">PIPELINE</span> OPERATOR</span>
+    <span class="sys-chip" data-od-id="sys-chip"><span class="dot"></span>SYSTEM: NOMINAL</span>
+    <nav class="toplinks" aria-label="Primary">
+      <a href="#problem">Problem</a>
+      <a href="#engine">Engine</a>
+      <a href="#desk">Deal Desk</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#desk" class="nav-cta" data-od-id="nav-cta">Run a lead</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================================================ HERO -->
+<section class="hero" data-od-id="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow" data-od-id="hero-eyebrow"><span class="dot amber"></span>PIPELINE OPS // v1</span>
+        <h1 data-od-id="hero-headline">It decides, drafts,<br />and routes.<br /><span class="accent">You just send or call.</span></h1>
+        <p class="hero-sub" data-od-id="hero-sub">A folder-based operator that runs a diagnostic-first studio's entire sales pipeline. Paste a lead at any stage — it gates it, grades it, drafts the next action, and hands you the exact CRM write. Not a chatbot. Not a CRM. An operator.</p>
+        <div class="hero-ctas">
+          <a href="#desk" class="btn btn-primary" data-od-id="hero-cta-primary">▶ RUN A LEAD</a>
+          <a href="#engine" class="btn" data-od-id="hero-cta-secondary">SEE THE ENGINE</a>
+        </div>
+        <div class="hero-stats" data-od-id="hero-stats">
+          <div><div class="hstat-val">40–60</div><div class="hstat-lbl">leads / week handled</div></div>
+          <div><div class="hstat-val">6</div><div class="hstat-lbl">decision stations</div></div>
+          <div><div class="hstat-val">50–70%</div><div class="hstat-lbl">declined at the gate</div></div>
+        </div>
+      </div>
+
+      <!-- hero deal-desk telemetry board -->
+      <div class="panel deskboard" data-od-id="hero-board">
+        <div class="panel-header">
+          <span class="panel-title"><span class="dot cyan"></span>DEAL DESK — LIVE BOARD</span>
+          <span class="badge badge-nominal"><span class="dot"></span>SYNCED</span>
+        </div>
+        <div class="stations-strip" aria-hidden="true">
+          <div class="station-pip"><div class="n">01</div><div class="l">new</div></div>
+          <div class="station-pip"><div class="n">02</div><div class="l">cont</div></div>
+          <div class="station-pip active"><div class="n">03</div><div class="l">qual</div></div>
+          <div class="station-pip"><div class="n">04</div><div class="l">diag</div></div>
+          <div class="station-pip"><div class="n">05</div><div class="l">prop</div></div>
+          <div class="station-pip"><div class="n">06</div><div class="l">won</div></div>
+          <div class="station-pip"><div class="n">×</div><div class="l">lost</div></div>
+        </div>
+        <div class="lead-row"><span class="nm">Summit Roofing</span><span class="st">contacted</span><span class="gradechip g-a">A</span></div>
+        <div class="lead-row"><span class="nm">Apex HVAC</span><span class="st">contacted</span><span class="gradechip g-b">B</span></div>
+        <div class="lead-row"><span class="nm">Maria's Cleaning</span><span class="st">qualifier</span><span class="gradechip g-b">B+</span></div>
+        <div class="lead-row"><span class="nm">FastCash Title Loans</span><span class="st">gate</span><span class="gradechip g-kill">KILL</span></div>
+        <div class="lead-row"><span class="nm">8-loc Franchise</span><span class="st">diagnostic</span><span class="gradechip g-a">A+</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ THE PROBLEM -->
+<section id="problem" data-od-id="problem">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot amber"></span>FAULT REPORT // TRIAGE OVERLOAD</span>
+    <h2 class="section-title">The founder is drowning in triage.</h2>
+    <p class="section-lead">A solo studio founder sources 40–60 leads a week — cold calls, cold email, walk-ins, referrals, inbound forms. The selling isn't what kills them. The triage is: deciding what each lead is worth, what to send, and what happens next, across dozens of leads stalled at different stages at once.</p>
+    <div class="console prob-console" data-od-id="problem-console" style="margin-top:var(--space-6)">
+<span class="ln dim"># studio-pipeline // mon 08:14  ── inbox: 11 unworked, 23 stalled</span>
+<span class="ln"><span class="prompt">operator@desk:~$</span> status --pipeline</span>
+<span class="ln red">WARN  47 leads open across 6 stages — no disposition on 31 of them</span>
+<span class="ln amber">STALL Apex HVAC          contacted   no retry logged for 3d</span>
+<span class="ln amber">STALL Crestline Dental   proposal    silent 5d, no follow-up drafted</span>
+<span class="ln dim">QUEUE 9 scraped leads ungraded — gate not run</span>
+<span class="ln red">LOSS  ~half the workday spent deciding, not selling</span>
+<span class="ln"><span class="prompt">operator@desk:~$</span> <span class="pri">_</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ THE DISPOSITION ENGINE -->
+<section id="engine" data-od-id="engine">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot cyan"></span>MECHANISM // THE DISPOSITION ENGINE</span>
+    <h2 class="section-title">Six stations. One engine.</h2>
+    <p class="section-lead">Every input runs the same loop: <b style="color:var(--fg-primary)">locate the station → apply that station's rule → emit a disposition + a drafted artifact + the exact pipeline write.</b> Before any outreach, two non-negotiable gates fire — the hard-disqualify Gate, then the 5-dimension Score.</p>
+
+    <div class="engine-strip" data-od-id="engine-strip">
+      <div class="engine-cell"><div class="num">STATION 01</div><div class="title">Gate &amp; Grade</div><div class="stage">→ new</div><div class="desc">Run the gate. If it clears, score it. Route by grade. Draft the first touch.</div></div>
+      <div class="engine-cell"><div class="num">STATION 02</div><div class="title">Outreach Outcome</div><div class="stage">→ contacted / replied</div><div class="desc">Read the touch result. Voicemail, retry, book the qualifier, or kill.</div></div>
+      <div class="engine-cell"><div class="num">STATION 03</div><div class="title">Qualify</div><div class="stage">→ qualifier</div><div class="desc">5 answers in. Proceed, decline on a hard flag, or refer below floor.</div></div>
+      <div class="engine-cell"><div class="num">STATION 04</div><div class="title">Diagnose &amp; Prescribe</div><div class="stage">→ diagnostic</div><div class="desc">Route to a pattern A–H, set the tier and price, draft the proposal.</div></div>
+      <div class="engine-cell"><div class="num">STATION 05</div><div class="title">Close / Recover</div><div class="stage">→ proposal</div><div class="desc">Accept → kickoff. Objection → counter. Silence → 2 follow-ups, then ghosted.</div></div>
+      <div class="engine-cell"><div class="num">STATION 06</div><div class="title">Loss / Recovery</div><div class="stage">→ lost</div><div class="desc">Capture the reason. Nurture re-entry in 60–90d, or archive.</div></div>
+    </div>
+
+    <div class="output-shape" data-od-id="output-shape">
+      <h3 style="font-family:var(--font-mono);font-size:16px;color:var(--fg-primary);margin-bottom:var(--space-3)">THE OUTPUT SHAPE — every response, every station</h3>
+      <div class="shape-row"><span class="k">WHERE</span><span class="v">The lead's current station + what just happened. One line.</span></div>
+      <div class="shape-row"><span class="k">DISPOSITION</span><span class="v">The decision, stated first, with the rule that fired and the grade.</span></div>
+      <div class="shape-row"><span class="k">ARTIFACT</span><span class="v">The drafted thing — call angle, email, decline — ready to send. Actual words, not "you could say…".</span></div>
+      <div class="shape-row"><span class="k">NEXT ACTION + DUE</span><span class="v">The single next thing and when it's due.</span></div>
+      <div class="shape-row"><span class="k">PIPELINE UPDATE</span><span class="v">The exact field writes from the real taxonomy: stage · grade · channel · outcome.</span></div>
+      <div class="shape-row"><span class="k">FLAGS</span><span class="v">Only when present. What's escalated to the human, why, and the one open question.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ LIVE DEAL DESK -->
+<section id="desk" data-od-id="desk">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot amber"></span>⭐ LIVE DEAL DESK // INTERACTIVE</span>
+    <h2 class="section-title">Run a lead through the real engine.</h2>
+    <p class="section-lead">Pick a preset or fill the form, then hit RUN. The same logic the studio's CRM runs on — the gate, the weighted 5-dimension score, grade routing, angle selection — executes in your browser and renders the full disposition. The edge cases are real: kills, whales, sub-floor referrals, and haggle declines all fire.</p>
+
+    <div class="desk-layout">
+      <!-- INPUT CONSOLE -->
+      <div class="panel" data-od-id="desk-input">
+        <div class="panel-header">
+          <span class="panel-title"><span class="dot cyan"></span>LEAD INPUT</span>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:10px;color:var(--fg-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Preset leads</p>
+        <div class="preset-chips" id="presetChips" role="group" aria-label="Preset leads"></div>
+
+        <form id="leadForm" autocomplete="off">
+          <div class="form-grid" style="margin-top:var(--space-3)">
+            <div class="field full">
+              <label for="biz">Business name</label>
+              <input type="text" id="biz" name="biz" value="Summit Roofing" />
+            </div>
+            <div class="field full">
+              <label for="industry">Industry</label>
+              <select id="industry" name="industry">
+                <option value="roofing">Roofing / contractor</option>
+                <option value="hvac">HVAC / plumbing</option>
+                <option value="cleaning">Cleaning / home service</option>
+                <option value="dental">Dental / salon / clinic</option>
+                <option value="franchise">Multi-location franchise (founder-owned)</option>
+                <option value="title-loans">Title / payday loans</option>
+                <option value="crypto">Crypto / NFT</option>
+                <option value="retail">Retail / food storefront</option>
+                <option value="video">Video / photography only</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="website">Has website</label>
+              <select id="website" name="website">
+                <option value="none">No site at all</option>
+                <option value="broken">Broken / missing info</option>
+                <option value="good">Decent site</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="reviews">Review count</label>
+              <input type="number" id="reviews" name="reviews" min="0" value="47" />
+            </div>
+            <div class="field">
+              <label for="phone">Phone listed</label>
+              <select id="phone" name="phone">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="owner">Owner named</label>
+              <select id="owner" name="owner">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="growth">Growth signal</label>
+              <select id="growth" name="growth">
+                <option value="yes">Yes (hiring / expanding)</option>
+                <option value="no">None visible</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="budget">Budget band</label>
+              <select id="budget" name="budget">
+                <option value="unknown">Unknown / cold</option>
+                <option value="under750">Under $750</option>
+                <option value="standard">$2.5–5k</option>
+                <option value="build">$5–12.5k</option>
+                <option value="whale">$25k+</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="signal">Behavior signal</label>
+              <select id="signal" name="signal">
+                <option value="none">None</option>
+                <option value="haggle">Haggling on price before scope</option>
+                <option value="leanin">Lean-in (read material, informed question)</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary run-btn" id="runBtn">▶ RUN DISPOSITION</button>
+        </form>
+      </div>
+
+      <!-- READOUT -->
+      <div class="panel" data-od-id="desk-readout" id="readoutPanel" aria-live="polite">
+        <div class="panel-header">
+          <span class="panel-title"><span class="dot"></span>DISPOSITION READOUT</span>
+          <span class="badge badge-dim mono" id="roStamp">AWAITING INPUT</span>
+        </div>
+        <div id="readout">
+          <div class="readout-empty">
+            <span class="blip">◎</span>
+            No lead loaded. Pick a preset or fill the form, then hit RUN.<br />The engine gates, scores, routes, and drafts.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ GROUNDED, NOT VIBES -->
+<section id="grounded" data-od-id="grounded">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot cyan"></span>VERIFICATION // GROUNDED, NOT VIBES</span>
+    <h2 class="section-title">Every decision is real logic, not a vibe.</h2>
+    <p class="section-lead">The disposition you just watched run is not improvised. It's the studio's actual decision system — a weighted rubric, hard gate filters, and walk-away flags — encoded explicitly.</p>
+
+    <div class="grid-3" style="margin-top:var(--space-6)">
+      <div class="panel" data-od-id="proof-rubric">
+        <div class="panel-header"><span class="panel-title">5-SIGNAL RUBRIC</span><span class="badge badge-amber">Σ = 100</span></div>
+        <ul class="proof-list">
+          <li><span class="lk">Need <span style="color:var(--fg-tertiary)">— weak/missing site</span></span><span class="wt">30%</span></li>
+          <li><span class="lk">ICP Fit <span style="color:var(--fg-tertiary)">— local service, right size</span></span><span class="wt">25%</span></li>
+          <li><span class="lk">Reach <span style="color:var(--fg-tertiary)">— phone, named owner</span></span><span class="wt">20%</span></li>
+          <li><span class="lk">Pay <span style="color:var(--fg-tertiary)">— established, busy</span></span><span class="wt">15%</span></li>
+          <li><span class="lk">Intent <span style="color:var(--fg-tertiary)">— growing now</span></span><span class="wt">10%</span></li>
+        </ul>
+        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">composite = Σ(dim/10 × weight) → A+≥90 · A 80 · B 65 · C 50 · D&lt;50</p>
+      </div>
+
+      <div class="panel" data-od-id="proof-gate">
+        <div class="panel-header"><span class="panel-title">THE GATE</span><span class="badge badge-critical">AUTO-KILL</span></div>
+        <ul class="proof-list">
+          <li><span class="flag">No phone number</span></li>
+          <li><span class="flag">Closed / not operational</span></li>
+          <li><span class="flag">National chain or franchise</span></li>
+          <li><span class="flag">Retail / food (no service need)</span></li>
+          <li><span class="flag">Excluded industry <span class="kx">×</span></span></li>
+          <li><span class="flag">Service we don't offer <span class="kx">×</span></span></li>
+        </ul>
+        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">First hit kills. No score, no draft. Most leads die here.</p>
+      </div>
+
+      <div class="panel" data-od-id="proof-flags">
+        <div class="panel-header"><span class="panel-title">7 WALK-AWAY FLAGS</span><span class="badge badge-warning">STOP LINE</span></div>
+        <ul class="proof-list">
+          <li><span class="flag">budget-below-floor</span></li>
+          <li><span class="flag">timeline-impossible</span></li>
+          <li><span class="flag">wrong-scope</span></li>
+          <li><span class="flag">excluded-industry</span></li>
+          <li><span class="flag">vendor-labor</span></li>
+          <li><span class="flag">no-decision-maker</span></li>
+          <li><span class="flag">pricing-pressure</span></li>
+        </ul>
+        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">Any one = decline or refer. A bad engagement costs more than no engagement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ BEFORE / AFTER -->
+<section id="before-after" data-od-id="before-after">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot amber"></span>DIFF // CHATBOT vs OPERATOR</span>
+    <h2 class="section-title">Same input. One defers. One decides.</h2>
+    <p class="section-lead"><span class="mono" style="color:var(--fg-primary)">Input:</span> New lead — Apex HVAC, 220 reviews (4.8★), decent website, phone listed, owner not named. Denver metro.</p>
+
+    <div class="ba-grid">
+      <div class="panel" data-od-id="ba-chatbot">
+        <div class="panel-header"><span class="panel-title">GENERIC ASSISTANT</span><span class="badge badge-critical">KICKS IT BACK</span></div>
+        <div class="console">"Apex HVAC looks like a solid local business with strong reviews. Since they already have a website, the opportunity might be in other services. A few options: you could reach out about a redesign, pitch AI tools, or add them to a nurture list. <span class="amber">What would you like to do? I can draft whichever you prefer.</span>"</div>
+        <p style="font-size:12px;color:var(--fg-tertiary);margin-top:10px;font-family:var(--font-mono)">Ends in a question. Hands the decision back. Drafts nothing.</p>
+      </div>
+
+      <div class="panel" data-od-id="ba-operator">
+        <div class="panel-header"><span class="panel-title">THE OPERATOR</span><span class="badge badge-nominal">DECIDES + DRAFTS</span></div>
+        <div class="console"><span class="dim">WHERE</span> — New scraped lead, pre-contact.
+<span class="dim">DISPOSITION</span> — <span class="green">ADVANCE → Angle 3 (AI receptionist).</span> Grade <span class="amber">B (68)</span>. Site is decent → web need is low → pivot to where the real pain is: missed calls at 220-review volume.
+<span class="dim">ARTIFACT</span> — <span class="cyan">"Hey, this is Jayden — I build AI phone systems for local businesses. Answers calls 24/7, qualifies leads, books jobs when your techs are out. Do you miss calls when you're busy?"</span>
+<span class="dim">NEXT ACTION</span> — Call. Get the owner's name first. No answer → retry 48h.
+<span class="dim">PIPELINE</span> — <span class="amber">stage: contacted · grade: B · channel: call</span></div>
+        <p style="font-size:12px;color:var(--fg-tertiary);margin-top:10px;font-family:var(--font-mono)">Picks the angle from the signal. Sendable. Routed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PRICING -->
+<section id="pricing" data-od-id="pricing">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot cyan"></span>DEPLOY // PRICING</span>
+    <h2 class="section-title">Three configurations.</h2>
+    <p class="section-lead">Specific, mechanical, no fluff. Pick the one that matches how many pipelines you run and how many hands are on the desk.</p>
+
+    <div class="price-grid">
+      <div class="panel price-card" data-od-id="price-solo">
+        <span class="price-name">Operator Solo</span>
+        <div class="price-tag">$39<span class="per">/mo</span></div>
+        <p style="font-size:12px;color:var(--fg-secondary)">One founder, one pipeline. The full engine on your desk.</p>
+        <ul class="price-feats">
+          <li>1 active pipeline</li>
+          <li>Gate + 5-dimension score on every lead</li>
+          <li>All 6 stations, all drafted artifacts</li>
+          <li>Outreach templates: call angles, email, decline, referral</li>
+          <li>Pipeline-field writes you paste into any CRM</li>
+        </ul>
+        <a href="#desk" class="btn" style="justify-content:center">START SOLO</a>
+      </div>
+
+      <div class="panel price-card feature" data-od-id="price-studio">
+        <span class="badge badge-amber most-tag">MOST OPERATORS</span>
+        <span class="price-name">Studio</span>
+        <div class="price-tag">$99<span class="per">/mo</span></div>
+        <p style="font-size:12px;color:var(--fg-secondary)">Everything wired together. Multiple pipelines, real integrations.</p>
+        <ul class="price-feats">
+          <li>Everything in Solo</li>
+          <li>Multi-pipeline (run cold + inbound + referral side by side)</li>
+          <li>CRM integrations — writes push automatically</li>
+          <li>Intake-form 5-signal scoring for warm leads</li>
+          <li>Loss analytics — declines sharpen the scripts</li>
+          <li>Service-routing patterns A–H + pricing tree</li>
+        </ul>
+        <a href="#desk" class="btn btn-primary" style="justify-content:center">DEPLOY STUDIO</a>
+      </div>
+
+      <div class="panel price-card" data-od-id="price-agency">
+        <span class="price-name">Agency</span>
+        <div class="price-tag">$249<span class="per">/mo</span></div>
+        <p style="font-size:12px;color:var(--fg-secondary)">Multi-seat desk for a team running shared boards.</p>
+        <ul class="price-feats">
+          <li>Everything in Studio</li>
+          <li>Multi-seat — shared deal desk, role permissions</li>
+          <li>The full live deal-desk board, team-wide</li>
+          <li>Per-operator queues + overdue alerts</li>
+          <li>Tunable rubric weights + custom gate filters</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#desk" class="btn" style="justify-content:center">SCALE THE DESK</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ BUILT ON ICM -->
+<section id="icm" data-od-id="icm">
+  <div class="wrap">
+    <div class="icm-note panel">
+      <div class="icm-folder">
+<span class="c"># the folder IS the operator</span>
+studio-pipeline-operator/
+├── <span class="f">CLAUDE.md</span>      <span class="c">routing</span>
+├── <span class="f">identity.md</span>    <span class="c">who</span>
+├── <span class="f">rules.md</span>       <span class="c">the engine</span>
+└── <span class="f">reference/</span>     <span class="c">the logic</span>
+    ├── scoring-rubric.md
+    ├── gate-checklist.md
+    └── walk-away-flags.md
+      </div>
+      <div>
+        <span class="eyebrow"><span class="dot amber"></span>BUILT ON ICM</span>
+        <h2 class="section-title" style="font-size:24px">The folder is the product.</h2>
+        <p class="section-lead">Built on interpretable context methodology: <b style="color:var(--fg-primary)">folders as architecture, each file one job, decision logic encoded explicitly.</b> The gate, the rubric, the flags, the templates — each is a file you can read, audit, and change. Drop the folder into a Claude Project and Claude becomes the pipeline desk. This page is just one way to watch it run.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ FOOTER CTA -->
+<section data-od-id="footer-cta">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>Stop spending your morning on triage.</h2>
+      <p>Paste a lead. Get a decision, a drafted artifact, and the exact CRM write — every time. The pipeline stops rotting from indecision.</p>
+      <a href="#desk" class="btn-dark">▶ RUN A LEAD NOW</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================ FOOTER -->
+<footer class="foot" data-od-id="footer">
+  <div class="wrap foot-inner">
+    <span class="wordmark">THE <span class="op">PIPELINE</span> OPERATOR</span>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="#problem">Problem</a>
+      <a href="#engine">Engine</a>
+      <a href="#desk">Deal Desk</a>
+      <a href="#grounded">Grounded</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <span class="foot-copy">Weekly Competition #7 — The Operator · Built on ICM</span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   THE DISPOSITION ENGINE — vanilla JS, faithful to the folder.
+   gate-checklist.md → walk-away-flags.md → scoring-rubric.md →
+   pipeline-fields.md → outreach-templates.md
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var EXCLUDED_INDUSTRY = { "title-loans": "predatory lending / payday loans", "crypto": "crypto / NFT speculation" };
+  var OFF_LANE = { "video": "video / photography (a service we don't offer)" };
+  var RETAIL = { "retail": "retail / food storefront (not a service business)" };
+
+  // ---- GATE (gate-checklist.md) : first hit kills -----------------------
+  function runGate(L) {
+    if (L.phone === "no") return { reason: "No phone number — no path to the decision-maker.", flag: null, declineReason: null };
+    if (EXCLUDED_INDUSTRY[L.industry]) return { reason: "Excluded industry — " + EXCLUDED_INDUSTRY[L.industry] + ". The studio won't serve it.", flag: "excluded-industry", declineReason: "studio-declined" };
+    if (RETAIL[L.industry]) return { reason: "Retail / food storefront — no service-business need the studio sells into.", flag: null, declineReason: "not-a-fit" };
+    if (OFF_LANE[L.industry]) return { reason: "Primary need is " + OFF_LANE[L.industry] + ". Out of lane — refer, don't admit.", flag: "wrong-scope", declineReason: "referred-elsewhere" };
+    return null; // passes
+  }
+
+  // ---- SCORE (scoring-rubric.md) : 5 dims, anchored -----------------------
+  function scoreLead(L) {
+    var rev = parseInt(L.reviews, 10); if (isNaN(rev)) rev = 0;
+    var d = {};
+
+    // NEED (30) — no/weak site scores HIGH
+    if (L.website === "none") d.need = { v: 9, why: "No site at all — acute, namable pain." };
+    else if (L.website === "broken") d.need = { v: 8, why: "Broken/missing-info site — real, sellable gap." };
+    else { // good site
+      if (L.industry === "hvac" && rev >= 150) d.need = { v: 6, why: "Site is fine, but high call-volume HVAC at " + rev + " reviews = missed-call pain." };
+      else d.need = { v: 3, why: "Decent site, minor gaps — low web need, pivot to the receptionist angle." };
+    }
+
+    // ICP FIT (25)
+    var sweet = { roofing:1, hvac:1, cleaning:1, dental:1 };
+    if (L.industry === "franchise") d.fit = { v: 8, why: "Founder-owned multi-location — strong fit, enterprise-scale." };
+    else if (sweet[L.industry]) d.fit = { v: 9, why: "Sweet-spot local service business, owner-operated — the studio's home turf." };
+    else d.fit = { v: 5, why: "Service-ish but off the core verticals." };
+
+    // REACH (20)
+    if (L.phone === "yes" && L.owner === "yes") d.reach = { v: 8, why: "Owner named + phone listed — plausible direct reach." };
+    else if (L.phone === "yes") d.reach = { v: 5, why: "Phone works but no owner name — main line only." };
+    else d.reach = { v: 1, why: "No reliable path to the signer." };
+
+    // PAY (15)
+    if (rev >= 150) d.pay = { v: 8, why: rev + " reviews — clearly busy and capitalized." };
+    else if (rev >= 40) d.pay = { v: 6, why: rev + " reviews — established, going concern." };
+    else if (rev >= 10) d.pay = { v: 5, why: rev + " reviews — established but small." };
+    else d.pay = { v: 3, why: "Thin proxies — " + rev + " reviews, low activity." };
+    if (L.budget === "whale") d.pay = { v: 9, why: "$25k+ stated budget — clearly capitalized." };
+    if (L.budget === "build") d.pay = { v: 8, why: "$5–12.5k budget band — solidly above floor." };
+
+    // INTENT (10)
+    if (L.growth === "yes") d.intent = { v: 8, why: "Hiring / expanding now — active growth motion." };
+    else if (rev >= 40) d.intent = { v: 4, why: "Operating steadily, no explicit growth signal." };
+    else d.intent = { v: 3, why: "Operating but flat — no visible growth motion." };
+
+    var W = { need:30, fit:25, reach:20, pay:15, intent:10 };
+    var contrib = {};
+    var composite = 0;
+    Object.keys(W).forEach(function (k) {
+      var c = (d[k].v / 10) * W[k];
+      contrib[k] = c;
+      composite += c;
+    });
+    composite = Math.round(composite);
+
+    var grade = composite >= 90 ? "A+" : composite >= 80 ? "A" : composite >= 65 ? "B" : composite >= 50 ? "C" : "D";
+    // B+ flourish: a high-B with no-site high need reads as B+
+    if (grade === "B" && composite >= 74) grade = "B+";
+
+    return { d: d, W: W, contrib: contrib, composite: composite, grade: grade };
+  }
+
+  function gradeClass(g) {
+    if (g.charAt(0) === "A") return "g-a";
+    if (g.charAt(0) === "B") return "g-b";
+    return "g-c";
+  }
+  function gradeColor(g) {
+    if (g.charAt(0) === "A") return "var(--data-success)";
+    if (g.charAt(0) === "B") return "var(--data-primary)";
+    return "var(--fg-secondary)";
+  }
+  function routeFor(grade) {
+    var base = grade.charAt(0);
+    if (base === "A") return { route: "Call first", channel: "call", note: "best ROI — draft the call angle now." };
+    if (base === "B") return { route: "Calling rotation", channel: "call", note: "draft outreach, queue it." };
+    if (base === "C") return { route: "Nurture", channel: "email", note: "low-cost nurture touch, don't spend a call." };
+    return { route: "Nurture (no warm pitch)", channel: "email", note: "never warm-pitch a D." };
+  }
+
+  // ---- ANGLE SELECTION (outreach-templates.md) ---------------------------
+  function pickAngle(L) {
+    var serviceBiz = { roofing:1, hvac:1, cleaning:1, dental:1, franchise:1 };
+    if (L.website === "none" || L.website === "broken") {
+      var obs = L.website === "none" ? "you don't have a website at all, just the Google listing" : "your site's missing key info and looks broken on mobile";
+      return {
+        n: "Angle 1 — specific observation",
+        script: '"Hey ' + (L.owner === "yes" ? "[owner]" : "there") + ', this is Jayden — quick question before you go. I was looking at ' + L.biz + ' before calling and noticed ' + obs + '. That something you\'ve been meaning to fix?"'
+      };
+    }
+    if (serviceBiz[L.industry]) {
+      return {
+        n: "Angle 3 — AI receptionist pivot",
+        script: '"Hey, this is Jayden — I build AI phone systems for local businesses. An AI that answers your calls 24/7, qualifies leads, and books jobs when you\'re out on a job. Do you miss calls when you\'re busy?"'
+      };
+    }
+    return {
+      n: "Cold email — specific-observation opener",
+      script: 'Subject: Quick question about ' + L.biz + '\n\nHi [first name],\nI came across ' + L.biz + ' while looking at local service businesses in your area. [One concrete observation.] I run a small AI-augmented studio — typically 1–2 week turnaround, $2,500–12,500 depending on scope. If that\'d help, I\'d love to talk. — Jayden'
+    };
+  }
+
+  function escapeHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  // ---- RENDERERS ---------------------------------------------------------
+  function renderKill(L, gate) {
+    var pu = "stage: lost" + (gate.declineReason ? " · decline_reason: " + gate.declineReason : "");
+    var flagLine = gate.flag ? '<div class="ro-block"><div class="lab">⚑ FLAGS</div><div class="body"><div class="alert-banner"><span class="aicon">▲</span><span class="atext">Hard flag: <b>' + gate.flag + '</b> — line stopped at the gate.</span></div></div></div>' : "";
+    return '' +
+      '<div class="ro-head">' +
+        '<div class="ro-where">WHERE — <b>Raw lead, gate check.</b></div>' +
+        '<span class="big-grade" style="background:rgba(255,71,87,0.15);color:var(--data-alert-critical)">KILL</span>' +
+      '</div>' +
+      '<div class="ro-disp kill">KILL — gated before scoring.</div>' +
+      '<div class="alert-banner"><span class="aicon">✕</span><span class="atext">' + escapeHtml(gate.reason) + '</span></div>' +
+      '<div class="ro-block"><div class="lab">ARTIFACT</div><div class="body" style="font-family:var(--font-mono);color:var(--fg-tertiary)">— none. A gated lead gets no drafted touch. Most leads die here; that is the point.</div></div>' +
+      '<div class="ro-block"><div class="lab">NEXT ACTION + DUE</div><div class="body">Archive. No re-entry. No follow-up.</div></div>' +
+      '<div class="ro-block"><div class="lab">PIPELINE UPDATE</div><div class="field-chips"><span class="badge badge-critical">' + pu + '</span></div></div>' +
+      flagLine;
+  }
+
+  function renderDecline(L, opts) {
+    // opts: {flag, declineReason, reason, artifact, where, disp, dispClass, gradeLabel, gradeStyle, nextAction, flagsHtml}
+    return '' +
+      '<div class="ro-head">' +
+        '<div class="ro-where">WHERE — <b>' + escapeHtml(opts.where) + '</b></div>' +
+        '<span class="big-grade" style="' + opts.gradeStyle + '">' + opts.gradeLabel + '</span>' +
+      '</div>' +
+      '<div class="ro-disp ' + opts.dispClass + '">' + escapeHtml(opts.disp) + '</div>' +
+      '<div class="alert-banner ' + (opts.dispClass === "refer" || opts.dispClass === "escalate" ? "warn" : "") + '"><span class="aicon">▲</span><span class="atext">' + escapeHtml(opts.reason) + '</span></div>' +
+      '<div class="ro-block"><div class="lab">ARTIFACT — drafted ' + (opts.dispClass === "refer" ? "referral" : opts.dispClass === "escalate" ? "diagnostic-confirm" : "decline") + '</div><div class="console" style="margin-top:6px">' + escapeHtml(opts.artifact) + '</div></div>' +
+      '<div class="ro-block"><div class="lab">NEXT ACTION + DUE</div><div class="body">' + escapeHtml(opts.nextAction) + '</div></div>' +
+      '<div class="ro-block"><div class="lab">PIPELINE UPDATE</div><div class="field-chips">' + opts.puChips + '</div></div>' +
+      (opts.flagsHtml || "");
+  }
+
+  function gaugeRow(label, weight, dim, contrib) {
+    return '' +
+      '<div class="gauge-row" data-dim="1">' +
+        '<div class="gauge-lbl">' + label + ' <span class="w">' + weight + '%</span></div>' +
+        '<div class="gauge-track"><div class="gauge-fill" data-target="' + (dim.v * 10) + '"></div></div>' +
+        '<div class="gauge-val">' + dim.v + '</div>' +
+        '<div class="gauge-reason">' + escapeHtml(dim.why) + ' <span style="color:var(--fg-tertiary)">→ +' + contrib.toFixed(1) + '</span></div>' +
+      '</div>';
+  }
+
+  function renderScored(L, S, signal) {
+    var route = routeFor(S.grade);
+    var angle = pickAngle(L);
+
+    // lean-in override
+    var leanNote = "";
+    var effGrade = S.grade;
+    if (signal === "leanin" && S.grade.charAt(0) !== "A") {
+      effGrade = "A";
+      leanNote = "Lean-in override: read the studio's material + asked an informed question — prioritize as if A. The rubric is the default, not the ceiling.";
+      route = routeFor("A");
+    }
+
+    var gradeStyle = "background:" + (effGrade.charAt(0) === "A" ? "rgba(38,222,129,0.15);color:var(--data-success)" : effGrade.charAt(0) === "B" ? "rgba(255,184,0,0.15);color:var(--data-primary)" : "var(--bg-surface-hover);color:var(--fg-secondary)");
+
+    var gauges =
+      gaugeRow("Need", 30, S.d.need, S.contrib.need) +
+      gaugeRow("ICP Fit", 25, S.d.fit, S.contrib.fit) +
+      gaugeRow("Reach", 20, S.d.reach, S.contrib.reach) +
+      gaugeRow("Pay", 15, S.d.pay, S.contrib.pay) +
+      gaugeRow("Intent", 10, S.d.intent, S.contrib.intent);
+
+    var dispText = "ADVANCE → outreach (" + route.route + ").";
+    var pu = "stage: contacted · grade: " + effGrade + " · channel: " + route.channel + " · next_action_due: +2d";
+
+    var leanHtml = leanNote ? '<div class="alert-banner warn"><span class="aicon">▲</span><span class="atext">' + escapeHtml(leanNote) + '</span></div>' : "";
+
+    var html = '' +
+      '<div class="ro-head">' +
+        '<div class="ro-where">WHERE — <b>New scraped lead, pre-contact.</b></div>' +
+        '<span class="badge badge-nominal"><span class="dot"></span>GATE PASSED</span>' +
+      '</div>' +
+      '<div class="ro-disp advance">' + dispText + '</div>' +
+      leanHtml +
+      '<div class="ro-block"><div class="lab">SCORE — 5 dimensions</div></div>' +
+      '<div class="gauges">' + gauges + '</div>' +
+      '<div class="composite-bar">' +
+        '<div><div class="composite-num" data-count="' + S.composite + '">0</div><div class="composite-meta">composite = Σ(dim/10 × weight)</div></div>' +
+        '<div style="font-family:var(--font-mono);font-size:11px;color:var(--fg-tertiary);max-width:200px">Route: ' + route.route + ' — ' + route.note + '</div>' +
+        '<span class="big-grade" style="' + gradeStyle + '">' + effGrade + '</span>' +
+      '</div>' +
+      '<div class="ro-block"><div class="lab">ARTIFACT — ' + angle.n + '</div><div class="console" style="margin-top:6px">' + escapeHtml(angle.script) + '</div></div>' +
+      '<div class="ro-block"><div class="lab">NEXT ACTION + DUE</div><div class="body">' + (route.channel === "call" ? "Call Tue/Wed AM. No answer → voicemail + SMS the portfolio link, retry within 48h (cap 3 dials)." : "Send the nurture touch. Queue, no call spend.") + '</div></div>' +
+      '<div class="ro-block"><div class="lab">PIPELINE UPDATE</div><div class="field-chips"><span class="badge badge-amber">' + pu + '</span></div></div>';
+
+    // FLAGS: unreachable A
+    if (effGrade.charAt(0) === "A" && S.d.reach.v <= 3) {
+      html += '<div class="ro-block"><div class="lab">⚑ FLAGS</div><div class="body"><div class="alert-banner warn"><span class="aicon">▲</span><span class="atext">A-grade fit but reach is weak — do NOT auto-advance. One move that opens it: find the owner\'s direct line, or use the AI-receptionist angle as a door. Open question: who actually signs?</span></div></div></div>';
+    }
+    return html;
+  }
+
+  // ---- MAIN DISPATCH -----------------------------------------------------
+  function operate(L) {
+    // pre-gate behavior flags (walk-away-flags.md) that override
+    if (L.signal === "haggle") {
+      return { type: "decline", html: renderDecline(L, {
+        where: "Inbound reply, pre-scope.",
+        disp: "DECLINE → studio-declined.",
+        dispClass: "decline",
+        gradeLabel: "FLAG", gradeStyle: "background:rgba(255,71,87,0.15);color:var(--data-alert-critical)",
+        reason: "Hard flag: pricing-pressure — haggling before scope is set. It's a decline, not a negotiation. It predicts a painful engagement.",
+        artifact: "Hey [name],\n\nThanks for the note. After thinking about it, I don't think GriffainAI is the right fit here — you're focused on price before we've even scoped the work, and that usually means a rough engagement for both of us.\n\nNo hard feelings. Best of luck with the project.\n\nJayden",
+        nextAction: "Send the decline. No follow-up. Archive — no re-entry.",
+        puChips: '<span class="badge badge-critical">stage: lost · decline_reason: studio-declined</span>',
+        flagsHtml: '<div class="ro-block"><div class="lab">⚑ FLAGS</div><div class="body"><div class="alert-banner"><span class="aicon">▲</span><span class="atext">pricing-pressure — scope flexes, price doesn\'t. The floor is the floor.</span></div></div></div>'
+      })};
+    }
+
+    // budget below floor → refer
+    if (L.budget === "under750") {
+      return { type: "refer", html: renderDecline(L, {
+        where: "Qualifier-stage budget answer.",
+        disp: "REFER → below floor.",
+        dispClass: "refer",
+        gradeLabel: "REFER", gradeStyle: "background:rgba(255,159,67,0.15);color:var(--data-alert-warning)",
+        reason: "Hard flag: budget-below-floor (under $750 Express floor). No negotiation — the floor is the floor.",
+        artifact: 'Totally fair, [name] — appreciate you being upfront. At that budget I\'d point you to a template builder like Squarespace or a freelancer on Fiverr; you\'ll get something live without overpaying for studio work. If your needs grow down the line, my door\'s open. — Jayden',
+        nextAction: "Send referral. No follow-up.",
+        puChips: '<span class="badge badge-warning">stage: lost · decline_reason: budget-floor</span>',
+        flagsHtml: ""
+      })};
+    }
+
+    // whale → escalate (before gate, founder-owned multi-location is NOT a chain kill)
+    if (L.budget === "whale") {
+      var pat = L.industry === "franchise" ? "founder-owned multi-location" : "high-budget multi-service";
+      return { type: "escalate", html: renderDecline(L, {
+        where: "Qualifier complete, " + pat + ".",
+        disp: "ESCALATE → diagnostic + human flag. Do NOT decline.",
+        dispClass: "escalate",
+        gradeLabel: "A+", gradeStyle: "background:rgba(38,222,129,0.15);color:var(--data-success)",
+        reason: "$25k+ is BIGGER, not worse — a Substrate-tier (enterprise) engagement, not a misfit. Killing a whale because it doesn't fit the Build tier is a misfire.",
+        artifact: '"This is exactly the kind of multi-part build I\'d want a full diagnostic for. Can we do 60 minutes Thursday? Come with your 3 best and 3 worst competitor sites, and who signs off on each location."',
+        nextAction: "Book the diagnostic Thu. Flag for the human before committing capacity.",
+        puChips: '<span class="badge badge-nominal">stage: diagnostic · grade: A+</span>',
+        flagsHtml: '<div class="ro-block"><div class="lab">⚑ FLAGS</div><div class="body"><div class="alert-banner warn"><span class="aicon">▲</span><span class="atext">For the human: exceeds the standard Build tier — likely a phased Substrate engagement ($20–40k). Confirm you want this scope at current capacity. One open question: is this one decision, or several owner decisions?</span></div></div></div>'
+      })};
+    }
+
+    // GATE
+    var gate = runGate(L);
+    if (gate) {
+      if (gate.flag === "wrong-scope") {
+        return { type: "refer", html: renderDecline(L, {
+          where: "Raw lead, gate check.",
+          disp: "REFER → out of lane.",
+          dispClass: "refer",
+          gradeLabel: "REFER", gradeStyle: "background:rgba(255,159,67,0.15);color:var(--data-alert-warning)",
+          reason: gate.reason,
+          artifact: 'Hey [name], thanks for reaching out. What you\'re describing is outside what the studio does — for this you\'d be better served by a specialist or someone on Upwork. Best of luck with it. — Jayden',
+          nextAction: "Send referral. Archive.",
+          puChips: '<span class="badge badge-warning">stage: lost · decline_reason: referred-elsewhere</span>',
+          flagsHtml: ""
+        })};
+      }
+      return { type: "kill", html: renderKill(L, gate) };
+    }
+
+    // SCORE + route
+    var S = scoreLead(L);
+    return { type: "scored", html: renderScored(L, S, L.signal) };
+  }
+
+  // ---- ANIMATIONS --------------------------------------------------------
+  function animateReadout(panel) {
+    panel.classList.remove("scanline");
+    void panel.offsetWidth;
+    panel.classList.add("scanline");
+    // gauges scan-fill
+    requestAnimationFrame(function () {
+      var fills = panel.querySelectorAll(".gauge-fill");
+      fills.forEach(function (f) { f.style.width = (f.getAttribute("data-target") || 0) + "%"; });
+    });
+    // composite count-up
+    var c = panel.querySelector(".composite-num");
+    if (c) {
+      var target = parseInt(c.getAttribute("data-count"), 10) || 0;
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce) { c.textContent = target; return; }
+      var start = null, dur = 650;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        c.textContent = Math.round(p * target);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+  }
+
+  // ---- PRESETS (rules.md / anti-examples.md edge cases) ------------------
+  var PRESETS = {
+    summit:  { label: "Summit Roofing → A",        biz: "Summit Roofing",        industry: "roofing",  website: "none", reviews: 47,  phone: "yes", owner: "yes", growth: "yes", budget: "unknown",  signal: "none" },
+    apex:    { label: "Apex HVAC → B",             biz: "Apex HVAC",             industry: "hvac",     website: "good", reviews: 220, phone: "yes", owner: "no",  growth: "no",  budget: "unknown",  signal: "none" },
+    maria:   { label: "Maria's Cleaning → B+",     biz: "Maria's House Cleaning", industry: "cleaning", website: "none", reviews: 14,  phone: "yes", owner: "yes", growth: "no",  budget: "unknown",  signal: "none" },
+    fastcash:{ label: "FastCash Title Loans → KILL", biz: "FastCash Title Loans", industry: "title-loans", website: "good", reviews: 30, phone: "yes", owner: "yes", growth: "no", budget: "standard", signal: "none" },
+    whale:   { label: "8-loc Franchise → ESCALATE", biz: "Regional Fitness Franchise", industry: "franchise", website: "good", reviews: 300, phone: "yes", owner: "yes", growth: "yes", budget: "whale", signal: "none" },
+    refer:   { label: "$400 budget → REFER",       biz: "Budget Lead",           industry: "cleaning", website: "none", reviews: 14,  phone: "yes", owner: "yes", growth: "no",  budget: "under750", signal: "none" },
+    haggle:  { label: "Haggling lead → DECLINE",   biz: "Haggle Co",             industry: "dental",   website: "good", reviews: 60,  phone: "yes", owner: "yes", growth: "no",  budget: "standard", signal: "haggle" }
+  };
+
+  // ---- WIRING ------------------------------------------------------------
+  var form = document.getElementById("leadForm");
+  var readout = document.getElementById("readout");
+  var readoutPanel = document.getElementById("readoutPanel");
+  var stamp = document.getElementById("roStamp");
+  var chipsBox = document.getElementById("presetChips");
+
+  function readForm() {
+    return {
+      biz: document.getElementById("biz").value || "this business",
+      industry: document.getElementById("industry").value,
+      website: document.getElementById("website").value,
+      reviews: document.getElementById("reviews").value,
+      phone: document.getElementById("phone").value,
+      owner: document.getElementById("owner").value,
+      growth: document.getElementById("growth").value,
+      budget: document.getElementById("budget").value,
+      signal: document.getElementById("signal").value
+    };
+  }
+
+  function loadPreset(p) {
+    document.getElementById("biz").value = p.biz;
+    document.getElementById("industry").value = p.industry;
+    document.getElementById("website").value = p.website;
+    document.getElementById("reviews").value = p.reviews;
+    document.getElementById("phone").value = p.phone;
+    document.getElementById("owner").value = p.owner;
+    document.getElementById("growth").value = p.growth;
+    document.getElementById("budget").value = p.budget;
+    document.getElementById("signal").value = p.signal;
+  }
+
+  // build chips
+  Object.keys(PRESETS).forEach(function (key) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "preset-chip";
+    btn.textContent = PRESETS[key].label;
+    btn.addEventListener("click", function () {
+      chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
+      btn.classList.add("active");
+      loadPreset(PRESETS[key]);
+      run();
+    });
+    chipsBox.appendChild(btn);
+  });
+
+  var stampMap = { kill: ["DISPOSITION: KILL", "badge badge-critical"], decline: ["DISPOSITION: DECLINE", "badge badge-critical"], refer: ["DISPOSITION: REFER", "badge badge-warning"], escalate: ["DISPOSITION: ESCALATE", "badge badge-amber"], scored: ["DISPOSITION: ADVANCE", "badge badge-nominal"] };
+
+  function run() {
+    var L = readForm();
+    var result = operate(L);
+    readout.innerHTML = result.html;
+    var sm = stampMap[result.type] || ["DONE", "badge badge-dim"];
+    stamp.textContent = sm[0];
+    stamp.className = sm[1] + " mono";
+    animateReadout(readoutPanel);
+    readoutPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  form.addEventListener("submit", function (e) { e.preventDefault(); run(); });
+
+  // clearing a manual edit deselects preset highlight
+  form.addEventListener("input", function () {
+    chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
+  });
+})();
+</script>
+</body>
+</html>
