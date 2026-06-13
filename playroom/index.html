@@ -3,470 +3,518 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>THE PIPELINE OPERATOR — Deal Desk</title>
+<title>The Pipeline Operator — Deal Desk</title>
 <meta name="description" content="A folder-based AI operator that runs a diagnostic-first studio's entire sales pipeline. It decides the disposition, drafts the next action, and tells you exactly what to write to the CRM." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   /* ============================================================
-     MISSION CONTROL — tokens (only the system's colors)
+     THE PIPELINE OPERATOR — Apple design system
+     Light · premium · brand-grade. Tokens below.
      ============================================================ */
   :root {
-    --bg-default: #0B1120;
-    --bg-surface: #111827;
-    --bg-surface-hover: #1A2535;
-    --bg-surface-active: #1E3A5F;
-    --border-default: #1E3A5F;
-    --border-subtle: #162035;
-    --data-primary: #FFB800;   /* amber */
-    --data-secondary: #00D4FF; /* cyan  */
-    --data-alert-critical: #FF4757;
-    --data-alert-warning: #FF9F43;
-    --data-success: #26DE81;
-    --fg-primary: #E8F0FE;
-    --fg-secondary: #8BA3C7;
-    --fg-tertiary: #4A6080;
+    /* surfaces */
+    --white: #FFFFFF;
+    --field: #F5F5F7;       /* pale alternating band */
+    --black: #000000;       /* cinematic drama sections */
 
-    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    /* ink */
+    --ink: #1D1D1F;         /* primary text */
+    --ink-2: #6E6E73;       /* secondary text */
+    --border: #D2D2D7;      /* hairline borders */
+    --border-2: #E8E8ED;    /* lighter hairline */
 
-    --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
-    --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
-    --space-16: 64px; --space-20: 80px;
+    /* accent — used sparingly */
+    --blue: #0071E3;
+    --blue-hover: #0077ED;
+    --blue-bright: #2997FF; /* on dark */
 
-    --transition-fast: 100ms ease-in;
-    --transition-base: 150ms ease-out;
-    --transition-slow: 300ms ease-out;
-    --maxw: 1200px;
+    /* semantic — live demo only */
+    --green: #1A7F4B;
+    --amber: #9A6A14;
+    --red: #C23934;
+    --green-tint: #E7F4ED;
+    --amber-tint: #F8F0DD;
+    --red-tint: #F8E9E8;
+
+    /* ---- legacy token aliases the engine JS references inline.
+       Remapped to the Apple semantic palette so the rendered
+       disposition keeps clean, modern, on-brand colors. ---- */
+    --data-success: var(--green);
+    --data-primary: var(--amber);          /* B / needs-review highlight */
+    --data-secondary: var(--blue);
+    --data-alert-critical: var(--red);
+    --data-alert-warning: var(--amber);
+    --fg-primary: var(--ink);
+    --fg-secondary: var(--ink-2);
+    --fg-tertiary: #86868B;
+    --bg-surface-hover: var(--field);
+    --border-default: var(--border);
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Inter, sans-serif;
+
+    --maxw: 1160px;
+    --radius-card: 16px;
+    --radius-field: 12px;
+    --pill: 980px;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: var(--bg-default);
-    color: var(--fg-primary);
+    background: var(--white);
+    color: var(--ink);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 17px;
     line-height: 1.5;
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
-    /* faint telemetry grid */
-    background-image:
-      linear-gradient(rgba(30,58,95,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(30,58,95,0.06) 1px, transparent 1px);
-    background-size: 40px 40px;
+    text-rendering: optimizeLegibility;
   }
-  ::selection { background: rgba(255,184,0,0.25); color: var(--fg-primary); }
+  ::selection { background: rgba(0,113,227,0.18); }
 
-  h1, h2, h3, h4 { margin: 0; font-weight: 600; }
+  h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.03em; }
   p { margin: 0; }
-  a { color: var(--data-secondary); text-decoration: none; }
+  a { color: var(--blue); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
-  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--space-6); }
-  .mono { font-family: var(--font-mono); }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 32px; }
 
-  /* section scaffolding */
-  section { padding: var(--space-20) 0; border-top: 1px solid var(--border-subtle); }
+  /* ---------- section scaffolding ---------- */
+  section { padding: 120px 0; }
+  .band-field { background: var(--field); }
+  .band-black { background: var(--black); color: var(--white); }
+
   .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px; font-weight: 500;
-    text-transform: uppercase; letter-spacing: 0.18em;
-    color: var(--fg-secondary);
-    display: inline-flex; align-items: center; gap: var(--space-2);
-    margin-bottom: var(--space-4);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.02em; text-transform: none;
+    color: var(--blue);
+    display: inline-block;
+    margin-bottom: 16px;
   }
-  .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--data-success);
-    box-shadow: 0 0 8px var(--data-success);
-    animation: blink 2.4s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-  .dot.amber { background: var(--data-primary); box-shadow: 0 0 8px var(--data-primary); }
-  .dot.cyan { background: var(--data-secondary); box-shadow: 0 0 8px var(--data-secondary); }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .band-black .eyebrow { color: var(--blue-bright); }
 
   .section-title {
-    font-family: var(--font-mono);
-    font-size: 30px; font-weight: 700; line-height: 1.1;
-    letter-spacing: -0.01em; color: var(--fg-primary);
-    margin-bottom: var(--space-4);
+    font-size: 48px; font-weight: 600; line-height: 1.06;
+    letter-spacing: -0.035em; color: var(--ink);
+    margin-bottom: 20px; max-width: 18ch;
   }
-  .section-lead { color: var(--fg-secondary); max-width: 64ch; font-size: 15px; }
+  .band-black .section-title { color: var(--white); }
+  .section-lead { color: var(--ink-2); max-width: 62ch; font-size: 21px; line-height: 1.45; letter-spacing: -0.02em; }
+  .band-black .section-lead { color: #A1A1A6; }
+  .section-lead b { color: var(--ink); font-weight: 600; }
 
-  /* panels */
-  .panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: 4px;
-    padding: var(--space-4);
-  }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .panel-title {
-    font-size: 12px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--fg-secondary);
-    display: flex; align-items: center; gap: var(--space-2);
-  }
-
-  /* badges */
-  .badge {
-    font-family: var(--font-mono);
-    font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    padding: 2px 8px; border-radius: 2px; white-space: nowrap;
-    display: inline-flex; align-items: center; gap: 5px;
-  }
-  .badge-nominal  { background: rgba(38,222,129,0.15); color: var(--data-success); border: 1px solid rgba(38,222,129,0.3); }
-  .badge-warning  { background: rgba(255,159,67,0.15); color: var(--data-alert-warning); border: 1px solid rgba(255,159,67,0.3); }
-  .badge-critical { background: rgba(255,71,87,0.15); color: var(--data-alert-critical); border: 1px solid rgba(255,71,87,0.3); }
-  .badge-amber    { background: rgba(255,184,0,0.15); color: var(--data-primary); border: 1px solid rgba(255,184,0,0.3); }
-  .badge-cyan     { background: rgba(0,212,255,0.13); color: var(--data-secondary); border: 1px solid rgba(0,212,255,0.3); }
-  .badge-dim      { background: var(--bg-surface-hover); color: var(--fg-secondary); border: 1px solid var(--border-default); }
-
-  /* buttons */
+  /* ---------- buttons (pill / capsule) ---------- */
   .btn {
-    font-family: var(--font-mono);
-    font-size: 13px; font-weight: 500;
-    letter-spacing: 0.02em;
-    padding: 11px 20px; border-radius: 4px;
-    border: 1px solid var(--border-default);
-    background: var(--bg-surface);
-    color: var(--fg-primary);
+    font-family: inherit;
+    font-size: 17px; font-weight: 500; letter-spacing: -0.01em;
+    padding: 13px 26px; border-radius: var(--pill);
+    border: 1px solid transparent;
+    background: transparent; color: var(--blue);
     cursor: pointer;
-    transition: border-color var(--transition-fast), background var(--transition-fast);
-    display: inline-flex; align-items: center; gap: var(--space-2);
+    transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.15s var(--ease);
+    display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none; white-space: nowrap;
   }
-  .btn:hover { border-color: var(--data-secondary); background: var(--bg-surface-hover); }
-  .btn:focus-visible { outline: 2px solid var(--data-secondary); outline-offset: 2px; }
+  .btn:hover { text-decoration: none; }
+  .btn:focus-visible { outline: 3px solid rgba(0,113,227,0.4); outline-offset: 2px; }
   .btn-primary {
-    background: var(--data-primary);
-    color: #0B1120; border-color: var(--data-primary);
-    font-weight: 700;
+    background: var(--blue); color: #fff; border-color: var(--blue);
   }
-  .btn-primary:hover { background: #ffc62e; border-color: #ffc62e; }
+  .btn-primary:hover { background: var(--blue-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--blue);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover { background: rgba(0,113,227,0.06); border-color: var(--blue); }
+  .btn-ghost { color: var(--blue); padding: 13px 8px; }
+  .btn-ghost:hover { text-decoration: underline; }
+  .btn-dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn-dark:hover { background: #000; transform: translateY(-1px); }
+  .btn-on-black { background: #fff; color: var(--ink); border-color: #fff; }
+  .btn-on-black:hover { background: #f0f0f2; transform: translateY(-1px); }
+  .btn-lg { font-size: 19px; padding: 16px 34px; }
 
-  /* ============================================================
-     STATUS BAR / NAV
-     ============================================================ */
+  /* ---------- sticky nav ---------- */
   header.topbar {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(11,17,32,0.92);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border-default);
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border-2);
   }
-  .topbar-inner {
-    display: flex; align-items: center; gap: var(--space-5);
-    height: 56px;
-  }
+  .topbar-inner { display: flex; align-items: center; gap: 24px; height: 60px; }
   .wordmark {
-    font-family: var(--font-mono);
-    font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
-    color: var(--fg-primary); white-space: nowrap;
+    font-size: 19px; font-weight: 600; letter-spacing: -0.02em;
+    color: var(--ink); white-space: nowrap;
   }
-  .wordmark .op { color: var(--data-primary); }
-  .sys-chip {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--data-success);
-    border: 1px solid rgba(38,222,129,0.3);
-    background: rgba(38,222,129,0.1);
-    padding: 3px 9px; border-radius: 2px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  nav.toplinks { margin-left: auto; display: flex; align-items: center; gap: var(--space-5); }
-  nav.toplinks a {
-    font-size: 12px; color: var(--fg-secondary);
-    text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-mono);
-  }
-  nav.toplinks a:hover { color: var(--fg-primary); text-decoration: none; }
+  .wordmark .op { color: var(--blue); }
+  nav.toplinks { margin-left: auto; display: flex; align-items: center; gap: 28px; }
+  nav.toplinks a { font-size: 15px; font-weight: 400; color: var(--ink-2); }
+  nav.toplinks a:hover { color: var(--ink); text-decoration: none; }
   .nav-cta {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    background: var(--data-primary); color: #0B1120;
-    padding: 7px 14px; border-radius: 4px; letter-spacing: 0.03em;
+    font-size: 15px; font-weight: 500;
+    background: var(--blue); color: #fff !important;
+    padding: 8px 18px; border-radius: var(--pill);
+    transition: background 0.2s var(--ease);
   }
-  .nav-cta:hover { background: #ffc62e; text-decoration: none; }
-  .menu-toggle { display: none; }
+  .nav-cta:hover { background: var(--blue-hover); text-decoration: none; }
 
   /* ============================================================
      HERO
      ============================================================ */
-  .hero { padding: 96px 0 80px; border-top: none; }
-  .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: var(--space-12); align-items: center; }
+  .hero { padding: 96px 0 110px; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 64px; align-items: center; }
   .hero h1 {
-    font-family: var(--font-mono);
-    font-size: 52px; font-weight: 700; line-height: 1.03;
-    letter-spacing: -0.02em; color: var(--fg-primary);
-    margin: var(--space-4) 0;
+    font-size: 72px; font-weight: 600; line-height: 1.03;
+    letter-spacing: -0.045em; color: var(--ink);
+    margin: 14px 0 24px;
   }
-  .hero h1 .accent { color: var(--data-primary); }
-  .hero-sub { font-size: 16px; color: var(--fg-secondary); max-width: 52ch; margin-bottom: var(--space-6); }
-  .hero-ctas { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-  .hero-stats {
-    display: flex; gap: var(--space-6); margin-top: var(--space-8);
-    flex-wrap: wrap;
-  }
-  .hstat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--data-primary); line-height: 1; }
-  .hstat-lbl { font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+  .hero h1 .accent { color: var(--blue); }
+  .hero-sub { font-size: 21px; line-height: 1.45; color: var(--ink-2); max-width: 46ch; margin-bottom: 32px; letter-spacing: -0.02em; }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .hero-stats { display: flex; gap: 48px; margin-top: 48px; flex-wrap: wrap; }
+  .hstat-val { font-size: 34px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -0.03em; }
+  .hstat-lbl { font-size: 14px; color: var(--ink-2); margin-top: 8px; }
 
-  /* hero deal-desk board */
-  .deskboard { padding: var(--space-3); }
-  .stations-strip {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
-    margin-bottom: var(--space-3);
+  /* hero deal-desk visual card */
+  .deskcard {
+    background: var(--white);
+    border: 1px solid var(--border-2);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.16);
   }
-  .station-pip {
-    text-align: center; padding: 6px 2px; border-radius: 3px;
-    background: var(--bg-surface-hover); border: 1px solid var(--border-subtle);
+  .deskcard-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
   }
-  .station-pip .n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--data-secondary); }
-  .station-pip .l { font-size: 8px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
-  .station-pip.active { border-color: var(--data-primary); background: rgba(255,184,0,0.08); }
-  .station-pip.active .n { color: var(--data-primary); }
+  .deskcard-title { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+  .synced { font-size: 12px; font-weight: 600; color: var(--green); display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+  .dot.live { animation: pulse 2.4s ease-in-out infinite; }
+
+  .stations-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 16px; }
+  .station-pip { text-align: center; padding: 8px 2px; border-radius: 8px; background: var(--field); }
+  .station-pip .n { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .station-pip .l { font-size: 9px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 3px; }
+  .station-pip.active { background: rgba(0,113,227,0.1); }
+  .station-pip.active .n { color: var(--blue); }
+  .station-pip.active .l { color: var(--blue); }
 
   .lead-row {
-    display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-2);
-    align-items: center;
-    padding: 9px 10px; border-radius: 3px;
-    background: var(--bg-surface-hover);
-    border: 1px solid var(--border-subtle);
-    margin-bottom: 5px;
+    display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+    padding: 12px 14px; border-radius: 12px; background: var(--field);
+    margin-bottom: 7px;
   }
-  .lead-row .nm { font-family: var(--font-mono); font-size: 12px; color: var(--fg-primary); }
-  .lead-row .st { font-size: 10px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+  .lead-row .nm { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .lead-row .st { font-size: 12px; color: var(--ink-2); }
   .gradechip {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    padding: 2px 7px; border-radius: 2px; min-width: 30px; text-align: center;
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--pill);
+    min-width: 34px; text-align: center;
   }
-  .g-a { background: rgba(38,222,129,0.15); color: var(--data-success); border: 1px solid rgba(38,222,129,0.35); }
-  .g-b { background: rgba(255,184,0,0.15); color: var(--data-primary); border: 1px solid rgba(255,184,0,0.35); }
-  .g-c { background: rgba(139,163,199,0.12); color: var(--fg-secondary); border: 1px solid var(--border-default); }
-  .g-kill { background: rgba(255,71,87,0.15); color: var(--data-alert-critical); border: 1px solid rgba(255,71,87,0.35); }
+  .g-a { background: var(--green-tint); color: var(--green); }
+  .g-b { background: var(--amber-tint); color: var(--amber); }
+  .g-c { background: var(--field); color: var(--ink-2); }
+  .g-kill { background: var(--red-tint); color: var(--red); }
 
   /* ============================================================
-     GENERIC GRIDS
+     GENERIC GRIDS / CARDS
      ============================================================ */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 
-  /* console panels */
-  .console {
-    font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6;
-    background: #0a0f1c; border: 1px solid var(--border-default);
-    border-radius: 4px; padding: var(--space-4);
-    color: var(--fg-secondary); white-space: pre-wrap; word-break: break-word;
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 28px;
   }
-  .console .cyan { color: var(--data-secondary); }
-  .console .amber { color: var(--data-primary); }
-  .console .red { color: var(--data-alert-critical); }
-  .console .green { color: var(--data-success); }
-  .console .dim { color: var(--fg-tertiary); }
-  .console .pri { color: var(--fg-primary); }
+  .band-field .card { border-color: var(--border-2); }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
 
-  /* problem console */
-  .prob-console .ln { display: block; }
-  .prob-console .prompt { color: var(--data-success); }
+  /* ---------- badges / pills used by engine + page ---------- */
+  .badge {
+    font-size: 12px; font-weight: 600; letter-spacing: -0.005em;
+    padding: 4px 12px; border-radius: var(--pill); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .badge-nominal  { background: var(--green-tint); color: var(--green); }
+  .badge-warning  { background: var(--amber-tint); color: var(--amber); }
+  .badge-critical { background: var(--red-tint); color: var(--red); }
+  .badge-amber    { background: var(--amber-tint); color: var(--amber); }
+  .badge-cyan     { background: rgba(0,113,227,0.1); color: var(--blue); }
+  .badge-dim      { background: var(--field); color: var(--ink-2); }
+  .badge .dot { background: currentColor; box-shadow: none; }
 
-  /* disposition-engine numbered strip */
-  .engine-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); margin-top: var(--space-6); }
-  .engine-cell { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 4px; padding: var(--space-4); }
-  .engine-cell .num { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
-  .engine-cell .title { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--fg-primary); margin: 6px 0 4px; }
-  .engine-cell .stage { font-size: 10px; color: var(--data-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
-  .engine-cell .desc { font-size: 12px; color: var(--fg-secondary); margin-top: 8px; }
+  /* "note card" — replaces the old terminal console for artifacts/copy.
+     A crisp drafted-email / message card. Mono only for true field strings. */
+  .console {
+    font-size: 15px; line-height: 1.6;
+    background: var(--field);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-field);
+    padding: 18px 20px;
+    color: var(--ink);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .console .cyan { color: var(--blue); font-weight: 500; }
+  .console .amber { color: var(--amber); font-weight: 600; }
+  .console .red { color: var(--red); font-weight: 600; }
+  .console .green { color: var(--green); font-weight: 600; }
+  .console .dim { color: var(--fg-tertiary); font-weight: 600; font-size: 12px; letter-spacing: 0.02em; }
+  .console .pri { color: var(--ink); }
 
-  .output-shape { margin-top: var(--space-8); }
-  .shape-row { display: grid; grid-template-columns: 150px 1fr; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
-  .shape-row .k { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--data-primary); letter-spacing: 0.03em; }
-  .shape-row .v { font-size: 13px; color: var(--fg-secondary); }
+  /* problem "log" — restyled as a clean status list, not a terminal */
+  .prob-log {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-card); padding: 12px 8px; margin-top: 40px;
+  }
+  .prob-log .ln {
+    display: grid; grid-template-columns: 84px 1fr; gap: 16px; align-items: baseline;
+    padding: 12px 20px; font-size: 15px; color: var(--ink-2); line-height: 1.45;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .prob-log .ln:last-child { border-bottom: none; }
+  .prob-log .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
+  .prob-log .tag.warn { color: var(--red); }
+  .prob-log .tag.stall { color: var(--amber); }
+  .prob-log .tag.dim { color: var(--fg-tertiary); }
+  .prob-log .ln b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- disposition engine numbered cards ---------- */
+  .engine-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+  .engine-cell {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-card); padding: 26px;
+    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .engine-cell:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -22px rgba(0,0,0,0.22); }
+  .engine-cell .num {
+    font-size: 14px; font-weight: 700; color: var(--blue);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(0,113,227,0.1); margin-bottom: 16px;
+  }
+  .engine-cell .title { font-size: 20px; font-weight: 600; color: var(--ink); margin: 0 0 6px; letter-spacing: -0.02em; }
+  .engine-cell .stage { font-size: 13px; color: var(--blue); font-weight: 500; }
+  .engine-cell .desc { font-size: 15px; color: var(--ink-2); margin-top: 12px; line-height: 1.5; }
+
+  .output-shape { margin-top: 64px; }
+  .output-shape h3 { font-size: 24px; font-weight: 600; color: var(--ink); margin-bottom: 16px; letter-spacing: -0.03em; }
+  .shape-row { display: grid; grid-template-columns: 180px 1fr; gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--border-2); }
+  .shape-row .k { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: 0.01em; }
+  .shape-row .v { font-size: 16px; color: var(--ink-2); line-height: 1.5; }
 
   /* ============================================================
      LIVE DEAL DESK
      ============================================================ */
-  #desk { background: linear-gradient(180deg, rgba(30,58,95,0.05), transparent 240px); }
-  .desk-layout { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-4); margin-top: var(--space-6); align-items: start; }
-  .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-3); }
-  .preset-chip {
-    font-family: var(--font-mono); font-size: 11px;
-    background: var(--bg-surface-hover); color: var(--fg-secondary);
-    border: 1px solid var(--border-default); border-radius: 3px;
-    padding: 6px 10px; cursor: pointer; transition: all var(--transition-fast);
-  }
-  .preset-chip:hover { border-color: var(--data-secondary); color: var(--fg-primary); }
-  .preset-chip:focus-visible { outline: 2px solid var(--data-secondary); outline-offset: 2px; }
-  .preset-chip.active { border-color: var(--data-primary); color: var(--data-primary); background: rgba(255,184,0,0.08); }
+  .desk-layout { display: grid; grid-template-columns: 400px 1fr; gap: 24px; margin-top: 48px; align-items: start; }
 
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-  .field { display: flex; flex-direction: column; gap: 5px; }
+  .preset-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .preset-chip {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    background: var(--white); color: var(--ink-2);
+    border: 1px solid var(--border); border-radius: var(--pill);
+    padding: 8px 14px; cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .preset-chip:hover { border-color: var(--blue); color: var(--ink); }
+  .preset-chip:focus-visible { outline: 3px solid rgba(0,113,227,0.4); outline-offset: 2px; }
+  .preset-chip.active { border-color: var(--blue); color: #fff; background: var(--blue); }
+
+  .preset-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); margin-bottom: 10px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  .field { display: flex; flex-direction: column; gap: 7px; }
   .field.full { grid-column: 1 / -1; }
-  .field label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-secondary);
-  }
+  .field label { font-size: 13px; font-weight: 600; color: var(--ink); }
   .field input, .field select {
-    font-family: var(--font-mono); font-size: 12.5px;
-    background: var(--bg-default); color: var(--fg-primary);
-    border: 1px solid var(--border-default); border-radius: 3px;
-    padding: 8px 9px;
+    font-family: inherit; font-size: 15px;
+    background: var(--white); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 12px;
+    transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
   }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--data-secondary); }
-  .run-btn { width: 100%; justify-content: center; margin-top: var(--space-4); }
+  .field input:focus, .field select:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.12);
+  }
+  .run-btn { width: 100%; justify-content: center; margin-top: 22px; }
 
   /* readout */
   .readout-empty {
-    border: 1px dashed var(--border-default); border-radius: 4px;
-    padding: var(--space-12) var(--space-6); text-align: center;
-    color: var(--fg-tertiary); font-family: var(--font-mono); font-size: 13px;
+    border: 1px dashed var(--border); border-radius: var(--radius-card);
+    padding: 72px 32px; text-align: center; color: var(--ink-2); font-size: 16px;
   }
-  .readout-empty .blip { font-size: 28px; color: var(--data-secondary); display:block; margin-bottom: 10px; animation: blink 2s ease-in-out infinite; }
+  .readout-empty .blip { font-size: 32px; color: var(--blue); display: block; margin-bottom: 14px; }
 
-  .ro-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
-  .ro-where { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); }
-  .ro-where b { color: var(--fg-primary); }
+  .ro-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .ro-where { font-size: 14px; color: var(--ink-2); }
+  .ro-where b { color: var(--ink); font-weight: 600; }
   .ro-disp {
-    font-family: var(--font-mono); font-size: 20px; font-weight: 700;
-    letter-spacing: -0.01em; margin: var(--space-2) 0 var(--space-4);
+    font-size: 27px; font-weight: 600; letter-spacing: -0.03em;
+    margin: 6px 0 18px; line-height: 1.15;
   }
-  .ro-disp.advance { color: var(--data-success); }
-  .ro-disp.kill, .ro-disp.decline { color: var(--data-alert-critical); }
-  .ro-disp.refer { color: var(--data-alert-warning); }
-  .ro-disp.escalate { color: var(--data-primary); }
+  .ro-disp.advance { color: var(--green); }
+  .ro-disp.kill, .ro-disp.decline { color: var(--red); }
+  .ro-disp.refer { color: var(--amber); }
+  .ro-disp.escalate { color: var(--green); }
 
-  /* gauges */
-  .gauges { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-4) 0; }
-  .gauge-row { display: grid; grid-template-columns: 130px 1fr 38px; gap: var(--space-3); align-items: center; }
-  .gauge-lbl { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
-  .gauge-lbl .w { color: var(--fg-tertiary); }
-  .gauge-track { height: 8px; background: var(--border-default); border-radius: 2px; overflow: hidden; position: relative; }
-  .gauge-fill { height: 100%; background: var(--data-primary); border-radius: 2px; width: 0; transition: width 700ms cubic-bezier(.2,.8,.2,1); }
-  .gauge-val { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--data-primary); text-align: right; }
-  .gauge-reason { grid-column: 1 / -1; font-size: 11px; color: var(--fg-tertiary); margin-top: -4px; padding-left: 130px; }
+  /* gauges — clean thin modern progress bars */
+  .gauges { display: flex; flex-direction: column; gap: 18px; margin: 18px 0; }
+  .gauge-row { display: grid; grid-template-columns: 150px 1fr 32px; gap: 16px; align-items: center; }
+  .gauge-lbl { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .gauge-lbl .w { color: var(--ink-2); font-weight: 400; }
+  .gauge-track { height: 6px; background: var(--border-2); border-radius: var(--pill); overflow: hidden; }
+  .gauge-fill { height: 100%; background: var(--blue); border-radius: var(--pill); width: 0; transition: width 800ms var(--ease); }
+  .gauge-val { font-size: 15px; font-weight: 600; color: var(--ink); text-align: right; }
+  .gauge-reason { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); margin-top: -8px; padding-left: 166px; line-height: 1.4; }
 
   .composite-bar {
-    display: flex; align-items: center; gap: var(--space-4);
-    background: var(--bg-surface-hover); border: 1px solid var(--border-default);
-    border-radius: 4px; padding: var(--space-3) var(--space-4); margin: var(--space-4) 0;
+    display: flex; align-items: center; gap: 24px;
+    background: var(--field); border: 1px solid var(--border-2);
+    border-radius: var(--radius-card); padding: 22px 24px; margin: 22px 0;
     flex-wrap: wrap;
   }
-  .composite-num { font-family: var(--font-mono); font-size: 40px; font-weight: 700; color: var(--data-primary); line-height: 1; }
-  .composite-meta { font-size: 12px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+  .composite-num { font-size: 52px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -0.04em; }
+  .composite-meta { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
   .big-grade {
-    font-family: var(--font-mono); font-size: 26px; font-weight: 700;
-    padding: 6px 16px; border-radius: 4px; margin-left: auto;
+    font-size: 26px; font-weight: 700; padding: 8px 22px;
+    border-radius: var(--pill); margin-left: auto; letter-spacing: -0.01em;
   }
 
-  .ro-block { margin-top: var(--space-4); }
-  .ro-block .lab { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--data-primary); text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .ro-block .body { font-size: 13px; color: var(--fg-secondary); }
-  .field-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ro-block { margin-top: 22px; }
+  .ro-block .lab { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: var(--ink-2); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .ro-block .body { font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+  .field-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
   .alert-banner {
-    display: flex; align-items: flex-start; gap: var(--space-3);
-    background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.4);
-    border-left: 4px solid var(--data-alert-critical); border-radius: 4px;
-    padding: var(--space-3) var(--space-4); margin-top: var(--space-3);
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--red-tint);
+    border-radius: var(--radius-field);
+    border-left: 4px solid var(--red);
+    padding: 14px 18px; margin-top: 12px;
   }
-  .alert-banner.warn { background: rgba(255,159,67,0.1); border-color: rgba(255,159,67,0.4); border-left-color: var(--data-alert-warning); }
-  .alert-banner .atext { font-size: 13px; color: var(--data-alert-critical); }
-  .alert-banner.warn .atext { color: var(--data-alert-warning); }
-  .alert-banner .aicon { flex-shrink: 0; font-family: var(--font-mono); font-weight: 700; }
-  .alert-banner.warn .aicon { color: var(--data-alert-warning); }
-  .alert-banner .aicon { color: var(--data-alert-critical); }
+  .alert-banner.warn { background: var(--amber-tint); border-left-color: var(--amber); }
+  .alert-banner .atext { font-size: 14px; color: var(--red); line-height: 1.45; }
+  .alert-banner.warn .atext { color: var(--amber); }
+  .alert-banner .atext b { font-weight: 700; }
+  .alert-banner .aicon { flex-shrink: 0; font-weight: 700; color: var(--red); }
+  .alert-banner.warn .aicon { color: var(--amber); }
 
-  .scanline { animation: scan 1.1s ease-out; }
-  @keyframes scan { 0%{box-shadow: inset 0 0 0 rgba(0,212,255,0)} 30%{box-shadow: inset 0 0 30px rgba(0,212,255,0.12)} 100%{box-shadow: inset 0 0 0 rgba(0,212,255,0)} }
+  /* subtle reveal on run (replaces the terminal scanline) */
+  .scanline { animation: reveal 0.5s var(--ease); }
+  @keyframes reveal { 0%{opacity:0; transform: translateY(8px)} 100%{opacity:1; transform:none} }
 
   /* ============================================================
      GROUNDED / PROOF
      ============================================================ */
   .proof-list { list-style: none; padding: 0; margin: 0; }
-  .proof-list li { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+  .proof-list li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-2); font-size: 15px; }
   .proof-list li:last-child { border-bottom: none; }
-  .proof-list .lk { color: var(--fg-secondary); }
-  .proof-list .wt { font-family: var(--font-mono); color: var(--data-primary); font-weight: 700; }
-  .proof-list .flag { color: var(--fg-secondary); font-family: var(--font-mono); font-size: 12px; }
-  .proof-list .flag .kx { color: var(--data-alert-warning); }
+  .proof-list .lk { color: var(--ink); }
+  .proof-list .lk span { color: var(--ink-2); }
+  .proof-list .wt { color: var(--blue); font-weight: 700; }
+  .proof-list .flag { color: var(--ink); }
+  .proof-list .flag .kx { color: var(--red); font-weight: 700; }
+  .proof-foot { font-size: 13px; color: var(--ink-2); margin-top: 16px; line-height: 1.5; }
 
   /* before/after */
-  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-6); }
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
 
-  /* pricing */
-  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-6); }
+  /* ============================================================
+     PRICING
+     ============================================================ */
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; align-items: stretch; }
   .price-card { position: relative; display: flex; flex-direction: column; }
-  .price-card.feature { border-color: var(--data-primary); box-shadow: 0 0 0 1px var(--data-primary); }
-  .price-tag { font-family: var(--font-mono); font-size: 34px; font-weight: 700; color: var(--fg-primary); line-height: 1; margin: var(--space-2) 0; }
-  .price-tag .per { font-size: 13px; color: var(--fg-tertiary); font-weight: 400; }
-  .price-name { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--data-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
-  .price-feats { list-style: none; padding: 0; margin: var(--space-4) 0; display: flex; flex-direction: column; gap: 9px; flex: 1; }
-  .price-feats li { font-size: 12.5px; color: var(--fg-secondary); display: flex; gap: 9px; }
-  .price-feats li::before { content: "›"; color: var(--data-success); font-family: var(--font-mono); font-weight: 700; }
-  .most-tag { position: absolute; top: -10px; right: var(--space-4); }
+  .price-card.feature { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), 0 24px 60px -28px rgba(0,113,227,0.4); }
+  .price-name { font-size: 15px; font-weight: 600; color: var(--blue); }
+  .price-tag { font-size: 48px; font-weight: 600; color: var(--ink); line-height: 1; margin: 12px 0; letter-spacing: -0.04em; }
+  .price-tag .per { font-size: 16px; color: var(--ink-2); font-weight: 400; letter-spacing: -0.01em; }
+  .price-desc { font-size: 15px; color: var(--ink-2); line-height: 1.45; }
+  .price-feats { list-style: none; padding: 0; margin: 24px 0; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .price-feats li { font-size: 15px; color: var(--ink); display: flex; gap: 10px; line-height: 1.4; }
+  .price-feats li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .price-card .btn { justify-content: center; }
+  .most-tag { position: absolute; top: -14px; left: 28px; }
 
-  /* ICM note */
-  .icm-note { display: grid; grid-template-columns: auto 1fr; gap: var(--space-6); align-items: center; }
-  .icm-folder { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); line-height: 1.7; }
-  .icm-folder .f { color: var(--data-secondary); }
+  /* ============================================================
+     BUILT ON ICM
+     ============================================================ */
+  .icm-note { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 56px; align-items: center; }
+  .icm-folder {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px; color: var(--ink-2); line-height: 1.85;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-card); padding: 28px; white-space: pre;
+  }
+  .icm-folder .f { color: var(--blue); }
   .icm-folder .c { color: var(--fg-tertiary); }
 
-  /* footer CTA */
-  .cta-band {
-    background: var(--data-primary); color: #0B1120;
-    border-radius: 4px; padding: var(--space-12) var(--space-8); text-align: center;
-  }
-  .cta-band h2 { font-family: var(--font-mono); font-size: 30px; font-weight: 700; color: #0B1120; margin-bottom: var(--space-3); }
-  .cta-band p { color: #1a2230; font-size: 15px; margin-bottom: var(--space-6); max-width: 56ch; margin-left: auto; margin-right: auto; }
-  .cta-band .btn-dark {
-    background: #0B1120; color: var(--data-primary); border-color: #0B1120;
-    font-family: var(--font-mono); font-weight: 700; font-size: 14px;
-    padding: 13px 28px; border-radius: 4px; display: inline-block; cursor: pointer;
-  }
-  .cta-band .btn-dark:hover { background: #111827; text-decoration: none; }
+  /* ============================================================
+     FOOTER CTA (black drama) + FOOTER
+     ============================================================ */
+  .cta-band { text-align: center; }
+  .cta-band h2 { font-size: 56px; font-weight: 600; color: var(--white); margin-bottom: 18px; letter-spacing: -0.04em; line-height: 1.05; }
+  .cta-band p { color: #A1A1A6; font-size: 21px; margin: 0 auto 36px; max-width: 56ch; line-height: 1.45; letter-spacing: -0.02em; }
 
-  footer.foot { padding: var(--space-8) 0; border-top: 1px solid var(--border-default); }
-  .foot-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
-  .foot-links { display: flex; gap: var(--space-5); flex-wrap: wrap; }
-  .foot-links a { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-  .foot-copy { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+  footer.foot { padding: 44px 0; border-top: 1px solid var(--border-2); }
+  .foot-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .foot-links { display: flex; gap: 28px; flex-wrap: wrap; }
+  .foot-links a { font-size: 14px; color: var(--ink-2); }
+  .foot-links a:hover { color: var(--ink); text-decoration: none; }
+  .foot-copy { font-size: 13px; color: var(--fg-tertiary); }
+
+  /* ============================================================
+     SCROLL REVEAL
+     ============================================================ */
+  .reveal-on-scroll { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+  .reveal-on-scroll.in { opacity: 1; transform: none; }
 
   /* ============================================================
      RESPONSIVE
      ============================================================ */
   @media (max-width: 980px) {
-    .hero-grid { grid-template-columns: 1fr; gap: var(--space-8); }
-    .hero h1 { font-size: 42px; }
+    section { padding: 88px 0; }
+    .hero { padding: 64px 0 80px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero h1 { font-size: 52px; }
+    .section-title { font-size: 38px; }
     .desk-layout { grid-template-columns: 1fr; }
-    .engine-strip { grid-template-columns: repeat(3, 1fr); }
+    .engine-strip { grid-template-columns: 1fr; }
     .grid-3, .price-grid { grid-template-columns: 1fr; }
-    .icm-note { grid-template-columns: 1fr; }
+    .icm-note { grid-template-columns: 1fr; gap: 32px; }
+    .cta-band h2 { font-size: 42px; }
   }
   @media (max-width: 768px) {
     nav.toplinks a:not(.nav-cta) { display: none; }
-    .sys-chip { display: none; }
     .grid-2, .ba-grid { grid-template-columns: 1fr; }
-    .section-title { font-size: 25px; }
-    .hero h1 { font-size: 36px; }
+    .section-lead { font-size: 19px; }
+    .hero-sub { font-size: 19px; }
     .shape-row { grid-template-columns: 1fr; gap: 4px; }
     .gauge-reason { padding-left: 0; }
   }
   @media (max-width: 480px) {
-    .wrap { padding: 0 var(--space-4); }
-    section { padding: var(--space-12) 0; }
-    .hero { padding: 56px 0 48px; }
-    .hero h1 { font-size: 30px; }
-    .engine-strip { grid-template-columns: 1fr 1fr; }
+    .wrap { padding: 0 20px; }
+    section { padding: 64px 0; }
+    .hero { padding: 40px 0 56px; }
+    .hero h1 { font-size: 40px; }
+    .section-title { font-size: 32px; }
+    .cta-band h2 { font-size: 34px; }
     .form-grid { grid-template-columns: 1fr; }
-    .gauge-row { grid-template-columns: 96px 1fr 32px; }
-    .gauge-lbl { font-size: 10px; }
-    .composite-num { font-size: 32px; }
-    .wordmark { font-size: 12px; }
+    .gauge-row { grid-template-columns: 110px 1fr 28px; }
+    .gauge-reason { padding-left: 0; }
+    .composite-num { font-size: 42px; }
+    .hero-stats { gap: 28px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -476,16 +524,16 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+    .reveal-on-scroll { opacity: 1; transform: none; }
   }
 </style>
 </head>
 <body>
 
-<!-- ============================================================ STATUS BAR / NAV -->
+<!-- ============================================================ STICKY NAV -->
 <header class="topbar" data-od-id="topbar">
   <div class="wrap topbar-inner">
-    <span class="wordmark" data-od-id="wordmark">THE <span class="op">PIPELINE</span> OPERATOR</span>
-    <span class="sys-chip" data-od-id="sys-chip"><span class="dot"></span>SYSTEM: NOMINAL</span>
+    <span class="wordmark" data-od-id="wordmark">The <span class="op">Pipeline</span> Operator</span>
     <nav class="toplinks" aria-label="Primary">
       <a href="#problem">Problem</a>
       <a href="#engine">Engine</a>
@@ -503,12 +551,12 @@
   <div class="wrap">
     <div class="hero-grid">
       <div>
-        <span class="eyebrow" data-od-id="hero-eyebrow"><span class="dot amber"></span>PIPELINE OPS // v1</span>
-        <h1 data-od-id="hero-headline">It decides, drafts,<br />and routes.<br /><span class="accent">You just send or call.</span></h1>
+        <span class="eyebrow" data-od-id="hero-eyebrow">Pipeline Ops · v1</span>
+        <h1 data-od-id="hero-headline">It decides, drafts,<br />and routes.<br /><span class="accent">You just send.</span></h1>
         <p class="hero-sub" data-od-id="hero-sub">A folder-based operator that runs a diagnostic-first studio's entire sales pipeline. Paste a lead at any stage — it gates it, grades it, drafts the next action, and hands you the exact CRM write. Not a chatbot. Not a CRM. An operator.</p>
         <div class="hero-ctas">
-          <a href="#desk" class="btn btn-primary" data-od-id="hero-cta-primary">▶ RUN A LEAD</a>
-          <a href="#engine" class="btn" data-od-id="hero-cta-secondary">SEE THE ENGINE</a>
+          <a href="#desk" class="btn btn-primary btn-lg" data-od-id="hero-cta-primary">Run a lead</a>
+          <a href="#engine" class="btn btn-ghost btn-lg" data-od-id="hero-cta-secondary">See the engine ›</a>
         </div>
         <div class="hero-stats" data-od-id="hero-stats">
           <div><div class="hstat-val">40–60</div><div class="hstat-lbl">leads / week handled</div></div>
@@ -517,11 +565,11 @@
         </div>
       </div>
 
-      <!-- hero deal-desk telemetry board -->
-      <div class="panel deskboard" data-od-id="hero-board">
-        <div class="panel-header">
-          <span class="panel-title"><span class="dot cyan"></span>DEAL DESK — LIVE BOARD</span>
-          <span class="badge badge-nominal"><span class="dot"></span>SYNCED</span>
+      <!-- hero deal-desk visual card -->
+      <div class="deskcard" data-od-id="hero-board">
+        <div class="deskcard-head">
+          <span class="deskcard-title">Deal Desk — live board</span>
+          <span class="synced"><span class="dot live"></span>Synced</span>
         </div>
         <div class="stations-strip" aria-hidden="true">
           <div class="station-pip"><div class="n">01</div><div class="l">new</div></div>
@@ -543,70 +591,67 @@
 </section>
 
 <!-- ============================================================ THE PROBLEM -->
-<section id="problem" data-od-id="problem">
+<section id="problem" class="band-field reveal-on-scroll" data-od-id="problem">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot amber"></span>FAULT REPORT // TRIAGE OVERLOAD</span>
+    <span class="eyebrow">The problem</span>
     <h2 class="section-title">The founder is drowning in triage.</h2>
     <p class="section-lead">A solo studio founder sources 40–60 leads a week — cold calls, cold email, walk-ins, referrals, inbound forms. The selling isn't what kills them. The triage is: deciding what each lead is worth, what to send, and what happens next, across dozens of leads stalled at different stages at once.</p>
-    <div class="console prob-console" data-od-id="problem-console" style="margin-top:var(--space-6)">
-<span class="ln dim"># studio-pipeline // mon 08:14  ── inbox: 11 unworked, 23 stalled</span>
-<span class="ln"><span class="prompt">operator@desk:~$</span> status --pipeline</span>
-<span class="ln red">WARN  47 leads open across 6 stages — no disposition on 31 of them</span>
-<span class="ln amber">STALL Apex HVAC          contacted   no retry logged for 3d</span>
-<span class="ln amber">STALL Crestline Dental   proposal    silent 5d, no follow-up drafted</span>
-<span class="ln dim">QUEUE 9 scraped leads ungraded — gate not run</span>
-<span class="ln red">LOSS  ~half the workday spent deciding, not selling</span>
-<span class="ln"><span class="prompt">operator@desk:~$</span> <span class="pri">_</span></span>
+    <div class="prob-log" data-od-id="problem-console">
+      <div class="ln"><span class="tag warn">WARN</span><span>47 leads open across 6 stages — <b>no disposition on 31 of them</b></span></div>
+      <div class="ln"><span class="tag stall">STALL</span><span><b>Apex HVAC</b> · contacted — no retry logged for 3 days</span></div>
+      <div class="ln"><span class="tag stall">STALL</span><span><b>Crestline Dental</b> · proposal — silent 5 days, no follow-up drafted</span></div>
+      <div class="ln"><span class="tag dim">QUEUE</span><span>9 scraped leads ungraded — the gate hasn't run</span></div>
+      <div class="ln"><span class="tag warn">LOSS</span><span><b>~half the workday</b> spent deciding, not selling</span></div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ THE DISPOSITION ENGINE -->
-<section id="engine" data-od-id="engine">
+<section id="engine" class="reveal-on-scroll" data-od-id="engine">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot cyan"></span>MECHANISM // THE DISPOSITION ENGINE</span>
+    <span class="eyebrow">The Disposition Engine</span>
     <h2 class="section-title">Six stations. One engine.</h2>
-    <p class="section-lead">Every input runs the same loop: <b style="color:var(--fg-primary)">locate the station → apply that station's rule → emit a disposition + a drafted artifact + the exact pipeline write.</b> Before any outreach, two non-negotiable gates fire — the hard-disqualify Gate, then the 5-dimension Score.</p>
+    <p class="section-lead">Every input runs the same loop: <b>locate the station → apply that station's rule → emit a disposition + a drafted artifact + the exact pipeline write.</b> Before any outreach, two non-negotiable gates fire — the hard-disqualify Gate, then the 5-dimension Score.</p>
 
     <div class="engine-strip" data-od-id="engine-strip">
-      <div class="engine-cell"><div class="num">STATION 01</div><div class="title">Gate &amp; Grade</div><div class="stage">→ new</div><div class="desc">Run the gate. If it clears, score it. Route by grade. Draft the first touch.</div></div>
-      <div class="engine-cell"><div class="num">STATION 02</div><div class="title">Outreach Outcome</div><div class="stage">→ contacted / replied</div><div class="desc">Read the touch result. Voicemail, retry, book the qualifier, or kill.</div></div>
-      <div class="engine-cell"><div class="num">STATION 03</div><div class="title">Qualify</div><div class="stage">→ qualifier</div><div class="desc">5 answers in. Proceed, decline on a hard flag, or refer below floor.</div></div>
-      <div class="engine-cell"><div class="num">STATION 04</div><div class="title">Diagnose &amp; Prescribe</div><div class="stage">→ diagnostic</div><div class="desc">Route to a pattern A–H, set the tier and price, draft the proposal.</div></div>
-      <div class="engine-cell"><div class="num">STATION 05</div><div class="title">Close / Recover</div><div class="stage">→ proposal</div><div class="desc">Accept → kickoff. Objection → counter. Silence → 2 follow-ups, then ghosted.</div></div>
-      <div class="engine-cell"><div class="num">STATION 06</div><div class="title">Loss / Recovery</div><div class="stage">→ lost</div><div class="desc">Capture the reason. Nurture re-entry in 60–90d, or archive.</div></div>
+      <div class="engine-cell"><div class="num">1</div><div class="title">Gate &amp; Grade</div><div class="stage">→ new</div><div class="desc">Run the gate. If it clears, score it. Route by grade. Draft the first touch.</div></div>
+      <div class="engine-cell"><div class="num">2</div><div class="title">Outreach Outcome</div><div class="stage">→ contacted / replied</div><div class="desc">Read the touch result. Voicemail, retry, book the qualifier, or kill.</div></div>
+      <div class="engine-cell"><div class="num">3</div><div class="title">Qualify</div><div class="stage">→ qualifier</div><div class="desc">5 answers in. Proceed, decline on a hard flag, or refer below floor.</div></div>
+      <div class="engine-cell"><div class="num">4</div><div class="title">Diagnose &amp; Prescribe</div><div class="stage">→ diagnostic</div><div class="desc">Route to a pattern A–H, set the tier and price, draft the proposal.</div></div>
+      <div class="engine-cell"><div class="num">5</div><div class="title">Close / Recover</div><div class="stage">→ proposal</div><div class="desc">Accept → kickoff. Objection → counter. Silence → 2 follow-ups, then ghosted.</div></div>
+      <div class="engine-cell"><div class="num">6</div><div class="title">Loss / Recovery</div><div class="stage">→ lost</div><div class="desc">Capture the reason. Nurture re-entry in 60–90d, or archive.</div></div>
     </div>
 
     <div class="output-shape" data-od-id="output-shape">
-      <h3 style="font-family:var(--font-mono);font-size:16px;color:var(--fg-primary);margin-bottom:var(--space-3)">THE OUTPUT SHAPE — every response, every station</h3>
-      <div class="shape-row"><span class="k">WHERE</span><span class="v">The lead's current station + what just happened. One line.</span></div>
-      <div class="shape-row"><span class="k">DISPOSITION</span><span class="v">The decision, stated first, with the rule that fired and the grade.</span></div>
-      <div class="shape-row"><span class="k">ARTIFACT</span><span class="v">The drafted thing — call angle, email, decline — ready to send. Actual words, not "you could say…".</span></div>
-      <div class="shape-row"><span class="k">NEXT ACTION + DUE</span><span class="v">The single next thing and when it's due.</span></div>
-      <div class="shape-row"><span class="k">PIPELINE UPDATE</span><span class="v">The exact field writes from the real taxonomy: stage · grade · channel · outcome.</span></div>
-      <div class="shape-row"><span class="k">FLAGS</span><span class="v">Only when present. What's escalated to the human, why, and the one open question.</span></div>
+      <h3>The output shape — every response, every station</h3>
+      <div class="shape-row"><span class="k">Where</span><span class="v">The lead's current station + what just happened. One line.</span></div>
+      <div class="shape-row"><span class="k">Disposition</span><span class="v">The decision, stated first, with the rule that fired and the grade.</span></div>
+      <div class="shape-row"><span class="k">Artifact</span><span class="v">The drafted thing — call angle, email, decline — ready to send. Actual words, not "you could say…".</span></div>
+      <div class="shape-row"><span class="k">Next action + due</span><span class="v">The single next thing and when it's due.</span></div>
+      <div class="shape-row"><span class="k">Pipeline update</span><span class="v">The exact field writes from the real taxonomy: stage · grade · channel · outcome.</span></div>
+      <div class="shape-row"><span class="k">Flags</span><span class="v">Only when present. What's escalated to the human, why, and the one open question.</span></div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ LIVE DEAL DESK -->
-<section id="desk" data-od-id="desk">
+<section id="desk" class="band-field reveal-on-scroll" data-od-id="desk">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot amber"></span>⭐ LIVE DEAL DESK // INTERACTIVE</span>
+    <span class="eyebrow">★ Live Deal Desk — interactive</span>
     <h2 class="section-title">Run a lead through the real engine.</h2>
-    <p class="section-lead">Pick a preset or fill the form, then hit RUN. The same logic the studio's CRM runs on — the gate, the weighted 5-dimension score, grade routing, angle selection — executes in your browser and renders the full disposition. The edge cases are real: kills, whales, sub-floor referrals, and haggle declines all fire.</p>
+    <p class="section-lead">Pick a preset or fill the form, then hit Run. The same logic the studio's CRM runs on — the gate, the weighted 5-dimension score, grade routing, angle selection — executes in your browser and renders the full disposition. The edge cases are real: kills, whales, sub-floor referrals, and haggle declines all fire.</p>
 
     <div class="desk-layout">
-      <!-- INPUT CONSOLE -->
-      <div class="panel" data-od-id="desk-input">
-        <div class="panel-header">
-          <span class="panel-title"><span class="dot cyan"></span>LEAD INPUT</span>
+      <!-- INPUT -->
+      <div class="card" data-od-id="desk-input">
+        <div class="card-head">
+          <span class="card-title">Lead input</span>
         </div>
-        <p style="font-family:var(--font-mono);font-size:10px;color:var(--fg-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Preset leads</p>
+        <p class="preset-label">Preset leads</p>
         <div class="preset-chips" id="presetChips" role="group" aria-label="Preset leads"></div>
 
         <form id="leadForm" autocomplete="off">
-          <div class="form-grid" style="margin-top:var(--space-3)">
+          <div class="form-grid">
             <div class="field full">
               <label for="biz">Business name</label>
               <input type="text" id="biz" name="biz" value="Summit Roofing" />
@@ -677,20 +722,20 @@
               </select>
             </div>
           </div>
-          <button type="submit" class="btn btn-primary run-btn" id="runBtn">▶ RUN DISPOSITION</button>
+          <button type="submit" class="btn btn-primary run-btn" id="runBtn">Run disposition</button>
         </form>
       </div>
 
       <!-- READOUT -->
-      <div class="panel" data-od-id="desk-readout" id="readoutPanel" aria-live="polite">
-        <div class="panel-header">
-          <span class="panel-title"><span class="dot"></span>DISPOSITION READOUT</span>
-          <span class="badge badge-dim mono" id="roStamp">AWAITING INPUT</span>
+      <div class="card" data-od-id="desk-readout" id="readoutPanel" aria-live="polite">
+        <div class="card-head">
+          <span class="card-title">Disposition readout</span>
+          <span class="badge badge-dim" id="roStamp">Awaiting input</span>
         </div>
         <div id="readout">
           <div class="readout-empty">
             <span class="blip">◎</span>
-            No lead loaded. Pick a preset or fill the form, then hit RUN.<br />The engine gates, scores, routes, and drafts.
+            No lead loaded. Pick a preset or fill the form, then hit Run.<br />The engine gates, scores, routes, and drafts.
           </div>
         </div>
       </div>
@@ -699,27 +744,27 @@
 </section>
 
 <!-- ============================================================ GROUNDED, NOT VIBES -->
-<section id="grounded" data-od-id="grounded">
+<section id="grounded" class="reveal-on-scroll" data-od-id="grounded">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot cyan"></span>VERIFICATION // GROUNDED, NOT VIBES</span>
-    <h2 class="section-title">Every decision is real logic, not a vibe.</h2>
+    <span class="eyebrow">Grounded, not vibes</span>
+    <h2 class="section-title">Every decision is real logic.</h2>
     <p class="section-lead">The disposition you just watched run is not improvised. It's the studio's actual decision system — a weighted rubric, hard gate filters, and walk-away flags — encoded explicitly.</p>
 
-    <div class="grid-3" style="margin-top:var(--space-6)">
-      <div class="panel" data-od-id="proof-rubric">
-        <div class="panel-header"><span class="panel-title">5-SIGNAL RUBRIC</span><span class="badge badge-amber">Σ = 100</span></div>
+    <div class="grid-3" style="margin-top:48px">
+      <div class="card" data-od-id="proof-rubric">
+        <div class="card-head"><span class="card-title">5-signal rubric</span><span class="badge badge-cyan">Σ = 100</span></div>
         <ul class="proof-list">
-          <li><span class="lk">Need <span style="color:var(--fg-tertiary)">— weak/missing site</span></span><span class="wt">30%</span></li>
-          <li><span class="lk">ICP Fit <span style="color:var(--fg-tertiary)">— local service, right size</span></span><span class="wt">25%</span></li>
-          <li><span class="lk">Reach <span style="color:var(--fg-tertiary)">— phone, named owner</span></span><span class="wt">20%</span></li>
-          <li><span class="lk">Pay <span style="color:var(--fg-tertiary)">— established, busy</span></span><span class="wt">15%</span></li>
-          <li><span class="lk">Intent <span style="color:var(--fg-tertiary)">— growing now</span></span><span class="wt">10%</span></li>
+          <li><span class="lk">Need <span>— weak / missing site</span></span><span class="wt">30%</span></li>
+          <li><span class="lk">ICP Fit <span>— local service, right size</span></span><span class="wt">25%</span></li>
+          <li><span class="lk">Reach <span>— phone, named owner</span></span><span class="wt">20%</span></li>
+          <li><span class="lk">Pay <span>— established, busy</span></span><span class="wt">15%</span></li>
+          <li><span class="lk">Intent <span>— growing now</span></span><span class="wt">10%</span></li>
         </ul>
-        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">composite = Σ(dim/10 × weight) → A+≥90 · A 80 · B 65 · C 50 · D&lt;50</p>
+        <p class="proof-foot">composite = Σ(dim/10 × weight) → A+≥90 · A 80 · B 65 · C 50 · D&lt;50</p>
       </div>
 
-      <div class="panel" data-od-id="proof-gate">
-        <div class="panel-header"><span class="panel-title">THE GATE</span><span class="badge badge-critical">AUTO-KILL</span></div>
+      <div class="card" data-od-id="proof-gate">
+        <div class="card-head"><span class="card-title">The gate</span><span class="badge badge-critical">Auto-kill</span></div>
         <ul class="proof-list">
           <li><span class="flag">No phone number</span></li>
           <li><span class="flag">Closed / not operational</span></li>
@@ -728,11 +773,11 @@
           <li><span class="flag">Excluded industry <span class="kx">×</span></span></li>
           <li><span class="flag">Service we don't offer <span class="kx">×</span></span></li>
         </ul>
-        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">First hit kills. No score, no draft. Most leads die here.</p>
+        <p class="proof-foot">First hit kills. No score, no draft. Most leads die here.</p>
       </div>
 
-      <div class="panel" data-od-id="proof-flags">
-        <div class="panel-header"><span class="panel-title">7 WALK-AWAY FLAGS</span><span class="badge badge-warning">STOP LINE</span></div>
+      <div class="card" data-od-id="proof-flags">
+        <div class="card-head"><span class="card-title">7 walk-away flags</span><span class="badge badge-warning">Stop line</span></div>
         <ul class="proof-list">
           <li><span class="flag">budget-below-floor</span></li>
           <li><span class="flag">timeline-impossible</span></li>
@@ -742,51 +787,51 @@
           <li><span class="flag">no-decision-maker</span></li>
           <li><span class="flag">pricing-pressure</span></li>
         </ul>
-        <p style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono);margin-top:10px">Any one = decline or refer. A bad engagement costs more than no engagement.</p>
+        <p class="proof-foot">Any one = decline or refer. A bad engagement costs more than no engagement.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ BEFORE / AFTER -->
-<section id="before-after" data-od-id="before-after">
+<section id="before-after" class="band-field reveal-on-scroll" data-od-id="before-after">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot amber"></span>DIFF // CHATBOT vs OPERATOR</span>
+    <span class="eyebrow">Generic assistant vs operator</span>
     <h2 class="section-title">Same input. One defers. One decides.</h2>
-    <p class="section-lead"><span class="mono" style="color:var(--fg-primary)">Input:</span> New lead — Apex HVAC, 220 reviews (4.8★), decent website, phone listed, owner not named. Denver metro.</p>
+    <p class="section-lead"><b>Input:</b> New lead — Apex HVAC, 220 reviews (4.8★), decent website, phone listed, owner not named. Denver metro.</p>
 
     <div class="ba-grid">
-      <div class="panel" data-od-id="ba-chatbot">
-        <div class="panel-header"><span class="panel-title">GENERIC ASSISTANT</span><span class="badge badge-critical">KICKS IT BACK</span></div>
+      <div class="card" data-od-id="ba-chatbot">
+        <div class="card-head"><span class="card-title">Generic assistant</span><span class="badge badge-critical">Kicks it back</span></div>
         <div class="console">"Apex HVAC looks like a solid local business with strong reviews. Since they already have a website, the opportunity might be in other services. A few options: you could reach out about a redesign, pitch AI tools, or add them to a nurture list. <span class="amber">What would you like to do? I can draft whichever you prefer.</span>"</div>
-        <p style="font-size:12px;color:var(--fg-tertiary);margin-top:10px;font-family:var(--font-mono)">Ends in a question. Hands the decision back. Drafts nothing.</p>
+        <p class="proof-foot">Ends in a question. Hands the decision back. Drafts nothing.</p>
       </div>
 
-      <div class="panel" data-od-id="ba-operator">
-        <div class="panel-header"><span class="panel-title">THE OPERATOR</span><span class="badge badge-nominal">DECIDES + DRAFTS</span></div>
+      <div class="card" data-od-id="ba-operator">
+        <div class="card-head"><span class="card-title">The Operator</span><span class="badge badge-nominal">Decides + drafts</span></div>
         <div class="console"><span class="dim">WHERE</span> — New scraped lead, pre-contact.
 <span class="dim">DISPOSITION</span> — <span class="green">ADVANCE → Angle 3 (AI receptionist).</span> Grade <span class="amber">B (68)</span>. Site is decent → web need is low → pivot to where the real pain is: missed calls at 220-review volume.
 <span class="dim">ARTIFACT</span> — <span class="cyan">"Hey, this is Jayden — I build AI phone systems for local businesses. Answers calls 24/7, qualifies leads, books jobs when your techs are out. Do you miss calls when you're busy?"</span>
 <span class="dim">NEXT ACTION</span> — Call. Get the owner's name first. No answer → retry 48h.
 <span class="dim">PIPELINE</span> — <span class="amber">stage: contacted · grade: B · channel: call</span></div>
-        <p style="font-size:12px;color:var(--fg-tertiary);margin-top:10px;font-family:var(--font-mono)">Picks the angle from the signal. Sendable. Routed.</p>
+        <p class="proof-foot">Picks the angle from the signal. Sendable. Routed.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ PRICING -->
-<section id="pricing" data-od-id="pricing">
+<section id="pricing" class="reveal-on-scroll" data-od-id="pricing">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot cyan"></span>DEPLOY // PRICING</span>
+    <span class="eyebrow">Pricing</span>
     <h2 class="section-title">Three configurations.</h2>
     <p class="section-lead">Specific, mechanical, no fluff. Pick the one that matches how many pipelines you run and how many hands are on the desk.</p>
 
     <div class="price-grid">
-      <div class="panel price-card" data-od-id="price-solo">
+      <div class="card price-card" data-od-id="price-solo">
         <span class="price-name">Operator Solo</span>
         <div class="price-tag">$39<span class="per">/mo</span></div>
-        <p style="font-size:12px;color:var(--fg-secondary)">One founder, one pipeline. The full engine on your desk.</p>
+        <p class="price-desc">One founder, one pipeline. The full engine on your desk.</p>
         <ul class="price-feats">
           <li>1 active pipeline</li>
           <li>Gate + 5-dimension score on every lead</li>
@@ -794,14 +839,14 @@
           <li>Outreach templates: call angles, email, decline, referral</li>
           <li>Pipeline-field writes you paste into any CRM</li>
         </ul>
-        <a href="#desk" class="btn" style="justify-content:center">START SOLO</a>
+        <a href="#desk" class="btn btn-secondary">Start Solo</a>
       </div>
 
-      <div class="panel price-card feature" data-od-id="price-studio">
-        <span class="badge badge-amber most-tag">MOST OPERATORS</span>
+      <div class="card price-card feature" data-od-id="price-studio">
+        <span class="badge badge-cyan most-tag">Most operators</span>
         <span class="price-name">Studio</span>
         <div class="price-tag">$99<span class="per">/mo</span></div>
-        <p style="font-size:12px;color:var(--fg-secondary)">Everything wired together. Multiple pipelines, real integrations.</p>
+        <p class="price-desc">Everything wired together. Multiple pipelines, real integrations.</p>
         <ul class="price-feats">
           <li>Everything in Solo</li>
           <li>Multi-pipeline (run cold + inbound + referral side by side)</li>
@@ -810,13 +855,13 @@
           <li>Loss analytics — declines sharpen the scripts</li>
           <li>Service-routing patterns A–H + pricing tree</li>
         </ul>
-        <a href="#desk" class="btn btn-primary" style="justify-content:center">DEPLOY STUDIO</a>
+        <a href="#desk" class="btn btn-primary">Deploy Studio</a>
       </div>
 
-      <div class="panel price-card" data-od-id="price-agency">
+      <div class="card price-card" data-od-id="price-agency">
         <span class="price-name">Agency</span>
         <div class="price-tag">$249<span class="per">/mo</span></div>
-        <p style="font-size:12px;color:var(--fg-secondary)">Multi-seat desk for a team running shared boards.</p>
+        <p class="price-desc">Multi-seat desk for a team running shared boards.</p>
         <ul class="price-feats">
           <li>Everything in Studio</li>
           <li>Multi-seat — shared deal desk, role permissions</li>
@@ -825,18 +870,17 @@
           <li>Tunable rubric weights + custom gate filters</li>
           <li>Priority support</li>
         </ul>
-        <a href="#desk" class="btn" style="justify-content:center">SCALE THE DESK</a>
+        <a href="#desk" class="btn btn-secondary">Scale the desk</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ BUILT ON ICM -->
-<section id="icm" data-od-id="icm">
+<section id="icm" class="band-field reveal-on-scroll" data-od-id="icm">
   <div class="wrap">
-    <div class="icm-note panel">
-      <div class="icm-folder">
-<span class="c"># the folder IS the operator</span>
+    <div class="icm-note">
+      <div class="icm-folder"><span class="c"># the folder IS the operator</span>
 studio-pipeline-operator/
 ├── <span class="f">CLAUDE.md</span>      <span class="c">routing</span>
 ├── <span class="f">identity.md</span>    <span class="c">who</span>
@@ -844,24 +888,23 @@ studio-pipeline-operator/
 └── <span class="f">reference/</span>     <span class="c">the logic</span>
     ├── scoring-rubric.md
     ├── gate-checklist.md
-    └── walk-away-flags.md
-      </div>
+    └── walk-away-flags.md</div>
       <div>
-        <span class="eyebrow"><span class="dot amber"></span>BUILT ON ICM</span>
-        <h2 class="section-title" style="font-size:24px">The folder is the product.</h2>
-        <p class="section-lead">Built on interpretable context methodology: <b style="color:var(--fg-primary)">folders as architecture, each file one job, decision logic encoded explicitly.</b> The gate, the rubric, the flags, the templates — each is a file you can read, audit, and change. Drop the folder into a Claude Project and Claude becomes the pipeline desk. This page is just one way to watch it run.</p>
+        <span class="eyebrow">Built on ICM</span>
+        <h2 class="section-title" style="font-size:38px">The folder is the product.</h2>
+        <p class="section-lead">Built on interpretable context methodology: <b>folders as architecture, each file one job, decision logic encoded explicitly.</b> The gate, the rubric, the flags, the templates — each is a file you can read, audit, and change. Drop the folder into a Claude Project and Claude becomes the pipeline desk. This page is just one way to watch it run.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============================================================ FOOTER CTA -->
-<section data-od-id="footer-cta">
+<!-- ============================================================ FOOTER CTA (cinematic black) -->
+<section class="band-black reveal-on-scroll" data-od-id="footer-cta">
   <div class="wrap">
     <div class="cta-band">
       <h2>Stop spending your morning on triage.</h2>
       <p>Paste a lead. Get a decision, a drafted artifact, and the exact CRM write — every time. The pipeline stops rotting from indecision.</p>
-      <a href="#desk" class="btn-dark">▶ RUN A LEAD NOW</a>
+      <a href="#desk" class="btn btn-on-black btn-lg">Run a lead now</a>
     </div>
   </div>
 </section>
@@ -871,7 +914,7 @@ studio-pipeline-operator/
 <!-- ============================================================ FOOTER -->
 <footer class="foot" data-od-id="footer">
   <div class="wrap foot-inner">
-    <span class="wordmark">THE <span class="op">PIPELINE</span> OPERATOR</span>
+    <span class="wordmark">The <span class="op">Pipeline</span> Operator</span>
     <nav class="foot-links" aria-label="Footer">
       <a href="#problem">Problem</a>
       <a href="#engine">Engine</a>
@@ -1008,11 +1051,11 @@ studio-pipeline-operator/
     return '' +
       '<div class="ro-head">' +
         '<div class="ro-where">WHERE — <b>Raw lead, gate check.</b></div>' +
-        '<span class="big-grade" style="background:rgba(255,71,87,0.15);color:var(--data-alert-critical)">KILL</span>' +
+        '<span class="big-grade" style="background:var(--red-tint);color:var(--red)">KILL</span>' +
       '</div>' +
       '<div class="ro-disp kill">KILL — gated before scoring.</div>' +
       '<div class="alert-banner"><span class="aicon">✕</span><span class="atext">' + escapeHtml(gate.reason) + '</span></div>' +
-      '<div class="ro-block"><div class="lab">ARTIFACT</div><div class="body" style="font-family:var(--font-mono);color:var(--fg-tertiary)">— none. A gated lead gets no drafted touch. Most leads die here; that is the point.</div></div>' +
+      '<div class="ro-block"><div class="lab">ARTIFACT</div><div class="body" style="color:var(--fg-tertiary)">— none. A gated lead gets no drafted touch. Most leads die here; that is the point.</div></div>' +
       '<div class="ro-block"><div class="lab">NEXT ACTION + DUE</div><div class="body">Archive. No re-entry. No follow-up.</div></div>' +
       '<div class="ro-block"><div class="lab">PIPELINE UPDATE</div><div class="field-chips"><span class="badge badge-critical">' + pu + '</span></div></div>' +
       flagLine;
@@ -1056,7 +1099,7 @@ studio-pipeline-operator/
       route = routeFor("A");
     }
 
-    var gradeStyle = "background:" + (effGrade.charAt(0) === "A" ? "rgba(38,222,129,0.15);color:var(--data-success)" : effGrade.charAt(0) === "B" ? "rgba(255,184,0,0.15);color:var(--data-primary)" : "var(--bg-surface-hover);color:var(--fg-secondary)");
+    var gradeStyle = "background:" + (effGrade.charAt(0) === "A" ? "var(--green-tint);color:var(--green)" : effGrade.charAt(0) === "B" ? "var(--amber-tint);color:var(--amber)" : "var(--field);color:var(--ink-2)");
 
     var gauges =
       gaugeRow("Need", 30, S.d.need, S.contrib.need) +
@@ -1081,7 +1124,7 @@ studio-pipeline-operator/
       '<div class="gauges">' + gauges + '</div>' +
       '<div class="composite-bar">' +
         '<div><div class="composite-num" data-count="' + S.composite + '">0</div><div class="composite-meta">composite = Σ(dim/10 × weight)</div></div>' +
-        '<div style="font-family:var(--font-mono);font-size:11px;color:var(--fg-tertiary);max-width:200px">Route: ' + route.route + ' — ' + route.note + '</div>' +
+        '<div style="font-size:13px;color:var(--ink-2);max-width:220px;line-height:1.45">Route: ' + route.route + ' — ' + route.note + '</div>' +
         '<span class="big-grade" style="' + gradeStyle + '">' + effGrade + '</span>' +
       '</div>' +
       '<div class="ro-block"><div class="lab">ARTIFACT — ' + angle.n + '</div><div class="console" style="margin-top:6px">' + escapeHtml(angle.script) + '</div></div>' +
@@ -1103,7 +1146,7 @@ studio-pipeline-operator/
         where: "Inbound reply, pre-scope.",
         disp: "DECLINE → studio-declined.",
         dispClass: "decline",
-        gradeLabel: "FLAG", gradeStyle: "background:rgba(255,71,87,0.15);color:var(--data-alert-critical)",
+        gradeLabel: "FLAG", gradeStyle: "background:var(--red-tint);color:var(--red)",
         reason: "Hard flag: pricing-pressure — haggling before scope is set. It's a decline, not a negotiation. It predicts a painful engagement.",
         artifact: "Hey [name],\n\nThanks for the note. After thinking about it, I don't think GriffainAI is the right fit here — you're focused on price before we've even scoped the work, and that usually means a rough engagement for both of us.\n\nNo hard feelings. Best of luck with the project.\n\nJayden",
         nextAction: "Send the decline. No follow-up. Archive — no re-entry.",
@@ -1118,7 +1161,7 @@ studio-pipeline-operator/
         where: "Qualifier-stage budget answer.",
         disp: "REFER → below floor.",
         dispClass: "refer",
-        gradeLabel: "REFER", gradeStyle: "background:rgba(255,159,67,0.15);color:var(--data-alert-warning)",
+        gradeLabel: "REFER", gradeStyle: "background:var(--amber-tint);color:var(--amber)",
         reason: "Hard flag: budget-below-floor (under $750 Express floor). No negotiation — the floor is the floor.",
         artifact: 'Totally fair, [name] — appreciate you being upfront. At that budget I\'d point you to a template builder like Squarespace or a freelancer on Fiverr; you\'ll get something live without overpaying for studio work. If your needs grow down the line, my door\'s open. — Jayden',
         nextAction: "Send referral. No follow-up.",
@@ -1134,7 +1177,7 @@ studio-pipeline-operator/
         where: "Qualifier complete, " + pat + ".",
         disp: "ESCALATE → diagnostic + human flag. Do NOT decline.",
         dispClass: "escalate",
-        gradeLabel: "A+", gradeStyle: "background:rgba(38,222,129,0.15);color:var(--data-success)",
+        gradeLabel: "A+", gradeStyle: "background:var(--green-tint);color:var(--green)",
         reason: "$25k+ is BIGGER, not worse — a Substrate-tier (enterprise) engagement, not a misfit. Killing a whale because it doesn't fit the Build tier is a misfire.",
         artifact: '"This is exactly the kind of multi-part build I\'d want a full diagnostic for. Can we do 60 minutes Thursday? Come with your 3 best and 3 worst competitor sites, and who signs off on each location."',
         nextAction: "Book the diagnostic Thu. Flag for the human before committing capacity.",
@@ -1151,7 +1194,7 @@ studio-pipeline-operator/
           where: "Raw lead, gate check.",
           disp: "REFER → out of lane.",
           dispClass: "refer",
-          gradeLabel: "REFER", gradeStyle: "background:rgba(255,159,67,0.15);color:var(--data-alert-warning)",
+          gradeLabel: "REFER", gradeStyle: "background:var(--amber-tint);color:var(--amber)",
           reason: gate.reason,
           artifact: 'Hey [name], thanks for reaching out. What you\'re describing is outside what the studio does — for this you\'d be better served by a specialist or someone on Upwork. Best of luck with it. — Jayden',
           nextAction: "Send referral. Archive.",
@@ -1253,15 +1296,15 @@ studio-pipeline-operator/
     chipsBox.appendChild(btn);
   });
 
-  var stampMap = { kill: ["DISPOSITION: KILL", "badge badge-critical"], decline: ["DISPOSITION: DECLINE", "badge badge-critical"], refer: ["DISPOSITION: REFER", "badge badge-warning"], escalate: ["DISPOSITION: ESCALATE", "badge badge-amber"], scored: ["DISPOSITION: ADVANCE", "badge badge-nominal"] };
+  var stampMap = { kill: ["Disposition: KILL", "badge badge-critical"], decline: ["Disposition: DECLINE", "badge badge-critical"], refer: ["Disposition: REFER", "badge badge-warning"], escalate: ["Disposition: ESCALATE", "badge badge-amber"], scored: ["Disposition: ADVANCE", "badge badge-nominal"] };
 
   function run() {
     var L = readForm();
     var result = operate(L);
     readout.innerHTML = result.html;
-    var sm = stampMap[result.type] || ["DONE", "badge badge-dim"];
+    var sm = stampMap[result.type] || ["Done", "badge badge-dim"];
     stamp.textContent = sm[0];
-    stamp.className = sm[1] + " mono";
+    stamp.className = sm[1];
     animateReadout(readoutPanel);
     readoutPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -1272,6 +1315,18 @@ studio-pipeline-operator/
   form.addEventListener("input", function () {
     chipsBox.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
   });
+
+  // ---- SCROLL REVEAL (presentation only) --------------------------------
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll(".reveal-on-scroll").forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll(".reveal-on-scroll").forEach(function (el) { el.classList.add("in"); });
+  }
 })();
 </script>
 </body>

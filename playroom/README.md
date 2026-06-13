@@ -13,7 +13,7 @@ A SaaS product page for **The Pipeline Operator** with an interactive console wh
 Pick a preset chip or fill the form, hit **RUN**, and the page:
 
 1. **Gates** the lead (hard auto-disqualify — excluded industry, no phone, retail/food, out-of-lane). A gated lead renders a **KILL** panel, no score.
-2. **Scores** it — five weighted dimensions (Need 30 / Fit 25 / Reach 20 / Pay 15 / Intent 10), rendered as animated telemetry gauges, with the composite and a grade chip.
+2. **Scores** it — five weighted dimensions (Need 30 / Fit 25 / Reach 20 / Pay 15 / Intent 10), rendered as clean animated progress bars, with the composite and a grade pill.
 3. **Routes** by grade (A/A+ call-first · B rotation · C/D nurture) and picks the outreach **angle**.
 4. Emits the full **output shape**: WHERE · DISPOSITION · ARTIFACT (paste-ready draft) · NEXT ACTION + DUE · PIPELINE UPDATE · FLAGS.
 
@@ -21,7 +21,7 @@ The edge cases all fire faithfully: the whale **escalates** (not declines), the 
 
 ## How it was built
 
-Built with the open-design **`saas-landing`** skill applied to the **`mission-control`** design system (deep-space command center — amber-on-navy telemetry, JetBrains Mono + Inter, dark only). Every color is a mission-control token; the accent (amber) is disciplined to the hero and the footer CTA band.
+Built with the open-design **`saas-landing`** skill applied to the **`apple`** design system (modern / premium — clean light canvases, generous whitespace, big bold display typography, pill-shaped CTAs, one confident blue accent). The system font stack (`-apple-system`/SF Pro) leads with **Inter** loaded via Google Fonts as the fallback. Surfaces alternate white `#FFFFFF` and pale `#F5F5F7` bands, with one cinematic black `#000000` footer CTA section. The blue accent (`#0071E3`) is disciplined to links, the primary CTA, and a few highlights; the green / amber / red semantic colors appear **only** inside the live demo for grade and disposition states.
 
 The content and the demo's logic are **grounded in the operator folder** (`../`) — the gate (`reference/gate-checklist.md`), the 5-dimension rubric (`reference/scoring-rubric.md`), the 7 walk-away flags (`reference/walk-away-flags.md`), the field taxonomy (`reference/pipeline-fields.md`), and the drafted artifacts (`reference/outreach-templates.md`). The page is a faithful reimplementation, not a mock.
 
