@@ -82,11 +82,31 @@ studio-pipeline-operator/
 
 ## How to use it
 
-**Option A — Claude Project (recommended).** Create a new Project, upload this folder (or paste the files), and tell Claude: *"Load CLAUDE.md and operate."* Then paste any lead — a scraped business, a reply, a set of qualifier answers, a proposal that went silent — and it returns the disposition + drafted artifact + the field writes.
+### Option A — Local Developer Board (ICM CCTV Server)
+This workspace implements **ICM CCTV** — a visual dashboard driven directly by local files. It removes the need for expensive external LLM APIs by letting a local terminal agent (like Antigravity or Claude Code) do the heavy lifting of pipeline decisions, while the server renders the status in real-time.
 
-**Option B — One file.** Paste `CLAUDE.md`, `identity.md`, and `rules.md` into any Claude chat, then paste a lead. You'll lose the reference depth but keep the decision engine.
+1. **Install and Start the Server:**
+   ```bash
+   npm install
+   npm run dev
+   ```
+2. **Open the Board:** Go to [http://localhost:4567](http://localhost:4567) to view the JIRA/Trello/Linear Kanban board.
+3. **Use with a Terminal Agent:**
+   - **Adding Leads:** Click the **+ Add Lead** button on the UI (or create a new `.md` file inside `_tv/screens/01-new/`).
+   - **Triage:** In your terminal, ask your agent: `process the new leads`. The agent will read the lead card from `01-new/`, apply the scoring rules, write the grade/timeline, and move the card file to `_tv/screens/02-contacted/`. The board in your browser will update instantly!
+   - **Operating Leads:** When you use the desk tools on the board drawer (click-to-call dialer, email composer, scheduler), the board writes response notes to `_tv/responses/`. Ask the agent: `process tool actions` to sync those calls and emails directly back into the lead's history on disk.
 
-**The input can be anything in the pipeline.** "Score this scraped business." "He replied 'maybe, send me info.'" "Qualifier done — here are her 5 answers." "Proposal's been quiet 4 days." The operator locates the station and runs it.
+### Option B — Interactive JSX Board in Claude.ai
+If you do not want to run a local server and prefer working in the Claude web interface:
+1. **Upload the Workspace:** Drag-and-drop the directory files (or copy `CLAUDE.md`, `identity.md`, `rules.md`, `examples.md`, and the `reference/` directory) into a Claude Project.
+2. **Ask for the Board:** In your Claude prompt, paste a lead or state your current pipeline, and say:
+   > *"Show my pipeline on a JSX CCTV Board."*
+3. **Interactive React Artifact:** Claude will compile the current pipeline leads into a React component and render a beautiful, fully interactive JIRA/Trello-style Kanban board directly inside Claude's **Artifacts** panel on the right. You can drag cards between columns, select cards, edit them, and manage your pipeline directly in the cloud chat!
+
+### Option C — Simple CLI / One-File Chat
+Paste `CLAUDE.md`, `identity.md`, and `rules.md` into any basic chatbot and paste a lead. You'll lose the reference depth and visual canvas but retain the core decision engine.
+
+The input can be anything in the pipeline: "Score this scraped business." "He replied 'maybe, send me info.'" "Qualifier done — here are her 5 answers." "Proposal's been quiet 4 days." The operator locates the station and runs it.
 
 ---
 

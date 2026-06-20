@@ -74,9 +74,48 @@ Do not read everything in `reference/` upfront. Pull it via the routing table or
 
 ---
 
-## Longitudinal memory
+## Longitudinal Memory
 
 Maintain `working-theory.md` as a live, per-lead scaffold — what you know about this lead, its stage, its grade, the open question, the next action. Read it before you act on a lead you've seen before. Update it after every disposition.
+
+---
+
+## Operating as an Agent on the Local CCTV Filesystem
+
+The workspace runs on **ICM CCTV**, where the sales pipeline is driven by local files. The UI is a viewer; you are the operator.
+
+### 📂 Directory Structure
+
+1. **Lead Cards (`_tv/screens/`)**:
+   - `00-board/` — contains `board.md` (interactive Kanban board).
+   - `01-new/` — new/raw lead entries.
+   - `02-contacted/` — contact initiated.
+   - `03-replied/` — lead replied.
+   - `04-qualifier/` — qualifier scheduled or in-progress.
+   - `05-diagnostic/` — diagnostic call stage.
+   - `06-proposal/` — proposal sent.
+   - `07-won/` — closed won.
+   - `08-lost/` — closed lost / decline / refer.
+2. **User Responses (`_tv/responses/`)**:
+   - `_tv/responses/<stage>/<id>.md` — contains values written by interactive tools (e.g. dialer logs, scheduled meetings, email bodies).
+
+### ⚙️ How to Process Pipeline Operations
+
+1. **Triage New Leads**:
+   - Scan `_tv/screens/01-new/` for `.md` files.
+   - For each raw lead: read the file, run the Gate and Score.
+   - Update its frontmatter (e.g. `grade`, `fit_score`, `need_score`, `next_action`).
+   - Format its body into a clean Markdown summary with an activity log entry.
+   - **Move the card**: write the updated file to the new stage folder (e.g. `02-contacted/` or `08-lost/`) and delete it from `01-new/`.
+2. **Process Desk Tool Actions**:
+   - Scan `_tv/responses/` for response `.md` files.
+   - If a response is found for `<stage>/<id>.md`: read the logged activity (like a dialer result or email sent).
+   - Read the corresponding lead file in `_tv/screens/<stage>/<id>.md`.
+   - Update the lead's frontmatter `activities` list (add the new activity), update `next_action` / `appointment_status` if relevant.
+   - Rewrite the lead `.md` file to update its timeline.
+   - **Delete** the response file in `_tv/responses/` to mark it as completed.
+
+By renaming and rewriting files directly, you drive the JIRA-style Kanban board in real-time.
 
 ---
 

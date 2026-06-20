@@ -13,3 +13,8 @@ Thumbs.db
 # Live session memory is illustrative; real lead data stays local
 sessions/*.local.md
 submission-posts.md
+
+# ICM CCTV ignores
+node_modules/
+_tv/screens/**/_layout.json
+_tv/responses/
